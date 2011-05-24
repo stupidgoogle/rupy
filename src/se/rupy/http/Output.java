@@ -161,7 +161,7 @@ public abstract class Output extends OutputStream implements Event.Block {
 		if (reply.event().session() != null && !reply.event().session().set()) {
 			Session session = reply.event().session();
 			String cookie = "Set-Cookie: key="
-				+ reply.event().session().key()
+				+ session.key()
 				+ ";"
 				+ (session.expires() > 0 ? " expires="
 						+ reply.event().worker().date().format(new Date(session

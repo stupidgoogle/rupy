@@ -115,11 +115,11 @@ public class Session extends Hash {
 		if (key == null)
 			return;
 
-		synchronized (daemon.session()) {
+		//synchronized (daemon.session()) {
 			daemon.session().remove(this.key);
 			this.key = key;
 			daemon.session().put(key, this);
-		}
+		//}
 
 		this.domain = domain;
 		this.expires = expires;
