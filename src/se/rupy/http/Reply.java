@@ -126,6 +126,11 @@ public class Reply {
 		this.type = type;
 	}
 
+	/**
+	 * This has to be called before {@link #output()} to have effect.
+	 * @param name
+	 * @param value
+	 */
 	public void header(String name, String value) {
 		if (headers == null) {
 			headers = new HashMap();
