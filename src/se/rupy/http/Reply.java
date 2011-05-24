@@ -118,6 +118,10 @@ public class Reply {
 		return type;
 	}
 
+	/**
+	 * This has to be called before {@link #output()} to have effect.
+	 * @param type
+	 */
 	public void type(String type) {
 		this.type = type;
 	}
