@@ -7,7 +7,7 @@ midi  audio/midi
 mp3   audio/mpeg3
 wav   audio/wav
 gif   image/gif
-jpeg  image/jpeg
+jpg   image/jpeg
 png   image/png
 tiff  image/tiff
 css   text/css
