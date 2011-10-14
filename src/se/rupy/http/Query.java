@@ -12,7 +12,7 @@ import java.util.*;
  */
 public class Query extends Hash {
 	static URLDecoder decoder = new URLDecoder();
-	public final static int GET = 1 << 0, POST = 1 << 1, PUT = 1 << 2, DELETE = 1 << 3;
+	public final static int GET = 1 << 0, POST = 1 << 1, PUT = 1 << 2, DELETE = 1 << 3, HEAD = 1 << 4;
 	private String path, version, parameters;
 	private HashMap headers;
 	private Input input;
@@ -49,6 +49,8 @@ public class Query extends Hash {
 		} else if (method.equalsIgnoreCase("delete")) {
 			this.method = DELETE;
 			parsed = false;
+		} else if (method.equalsIgnoreCase("head")) {
+			this.method = HEAD;
 		} else {
 			return false;
 		}

@@ -213,7 +213,7 @@ public class Event extends Throwable implements Chain.Link {
 		
 		remote = address();
 
-		if (!query.version().equalsIgnoreCase("HTTP/1.1")) {
+		if (query.version() == null || !query.version().equalsIgnoreCase("HTTP/1.1")) {
 			reply.code("505 Not Supported");
 		}
 		else if (!content() && !service()) {
