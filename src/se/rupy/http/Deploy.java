@@ -2,6 +2,7 @@ package se.rupy.http;
 
 import java.io.*;
 import java.net.*;
+import java.security.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.jar.*;
@@ -24,11 +25,17 @@ import java.util.jar.*;
  * @author marc
  */
 public class Deploy extends Service {
-	public static String path, pass;
+	protected static String path, pass;
 
 	public Deploy(String path, String pass) {
 		Deploy.path = path;
 		Deploy.pass = pass;
+
+		new File(path).mkdirs();
+	}
+
+	public Deploy(String path) {
+		Deploy.path = path;
 
 		new File(path).mkdirs();
 	}
@@ -47,10 +54,23 @@ public class Deploy extends Service {
 
 		if (pass == null) {
 			throw new Failure("Pass header missing.");
-		} else if (!Deploy.pass.equals(pass)) {
-			throw new Failure("Pass verification failed. (" + pass + ")");
-		} else if(Deploy.pass.equals("secret") && !event.remote().equals("127.0.0.1")) {
-			throw new Failure("'secret' pass can only deploy from 127.0.0.1. (" + event.remote() + ")");
+		}
+
+		if (Deploy.pass == null) {
+			Properties properties = new Properties();
+			properties.load(new FileInputStream(new File("passport")));
+			String host = properties.getProperty(name.substring(0, name.lastIndexOf('.')));
+
+			if (!host.equals(pass)) {
+				throw new Failure("Pass verification failed. (" + name + ")");
+			}
+		}
+		else {
+			if (!Deploy.pass.equals(pass)) {
+				throw new Failure("Pass verification failed. (" + pass + ")");
+			} else if(Deploy.pass.equals("secret") && !event.remote().equals("127.0.0.1")) {
+				throw new Failure("'secret' pass can only deploy from 127.0.0.1. (" + event.remote() + ")");
+			}
 		}
 
 		File file = new File(path + name);
@@ -79,6 +99,7 @@ public class Deploy extends Service {
 	 * @author Marc
 	 */
 	public static class Archive extends ClassLoader {
+		private AccessControlContext access;
 		private HashSet service;
 		private HashMap chain;
 		private String name;
@@ -87,6 +108,14 @@ public class Deploy extends Service {
 
 		Vector classes = new Vector();
 
+		Archive() {
+			// Default archive for inner services access control.
+			
+			PermissionCollection permissions = new Permissions();
+			access = new AccessControlContext(new ProtectionDomain[] {
+					new ProtectionDomain(null, permissions)});
+		}
+		
 		Archive(Daemon daemon, File file) throws Exception {
 			service = new HashSet();
 			chain = new HashMap();
@@ -94,7 +123,7 @@ public class Deploy extends Service {
 			date = file.lastModified();
 
 			JarInputStream in = new JarInput(new FileInputStream(file));
-			
+			/* Moved this to name convention of the deploy jar
 			try {
 				Attributes attr = in.getManifest().getMainAttributes();
 				host = (String) attr.get("host");
@@ -102,8 +131,17 @@ public class Deploy extends Service {
 			catch(Exception e) {
 				e.printStackTrace();
 			}
-
-			if(host == null) {
+			 */
+			if(daemon.host) {
+				host = file.getName().substring(0, file.getName().lastIndexOf('.'));
+				PermissionCollection permissions = new Permissions();
+				permissions.add(new SocketPermission("*", "connect"));
+				permissions.add(new FilePermission("app" + File.separator + host + File.separator + "-", "read"));
+				permissions.add(new FilePermission("app" + File.separator + host + File.separator + "-", "write"));
+				access = new AccessControlContext(new ProtectionDomain[] {
+						new ProtectionDomain(null, permissions)});
+			}
+			else {
 				host = "content";
 			}
 
@@ -148,7 +186,7 @@ public class Deploy extends Service {
 			throw new ClassNotFoundException();
 		}
 
-		private void instantiate(Small small, Daemon daemon) throws Exception {
+		private void instantiate(final Small small, Daemon daemon) throws Exception {
 			if (small.clazz == null) {
 				small.clazz = defineClass(small.name, small.data, 0,
 						small.data.length);
@@ -167,9 +205,20 @@ public class Deploy extends Service {
 
 			if(service) {
 				try {
-					this.service.add((Service) small.clazz.newInstance());
+					if(daemon.host) {
+						Service s = (Service) AccessController.doPrivileged(new PrivilegedExceptionAction() {
+							public Object run() throws Exception {
+								return (Service) small.clazz.newInstance();
+							}
+						}, access());
+
+						this.service.add(s);
+					}
+					else {
+						this.service.add(small.clazz.newInstance());
+					}
 				}
-				catch(InstantiationException e) {
+				catch(Exception e) {
 					if(daemon.verbose) {
 						daemon.out.println(small.name + " couldn't be instantiated!");
 					}
@@ -179,6 +228,10 @@ public class Deploy extends Service {
 			if(daemon.debug) {
 				daemon.out.println(small.name + (service ? "*" : ""));
 			}
+		}
+
+		protected AccessControlContext access() {
+			return access;
 		}
 
 		protected static String name(String name) {

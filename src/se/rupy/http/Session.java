@@ -42,6 +42,10 @@ public class Session extends Hash {
 		return event;
 	}
 	
+	protected Daemon daemon() {
+		return daemon;
+	}
+	
 	protected void remove() throws Exception {
 		remove(null);
 	}

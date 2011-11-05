@@ -3,6 +3,8 @@ package se.rupy.http;
 import java.io.*;
 import java.net.*;
 import java.nio.*;
+import java.security.AccessController;
+import java.security.PrivilegedExceptionAction;
 import java.text.*;
 import java.util.*;
 
@@ -409,7 +411,7 @@ public class Event extends Throwable implements Chain.Link {
 		}
 	}
 
-	protected final void session(Service service) throws Exception {
+	protected final void session(final Service service) throws Exception {
 		String key = cookie(query.header("cookie"), "key");
 
 		if(key == null && query.method() == Query.GET) {
@@ -437,7 +439,22 @@ public class Event extends Throwable implements Chain.Link {
 			}
 		}
 
-		if(service.index() == 0 && !push()) {
+		int index = 0;
+		
+		if(daemon.host) {
+			Integer i = (Integer) AccessController.doPrivileged(new PrivilegedExceptionAction() {
+				public Object run() throws Exception {
+					return new Integer(service.index());
+				}
+			}, daemon.control);
+			
+			index = i.intValue();
+		}
+		else {
+			index = service.index();
+		}
+		
+		if(index == 0 && !push()) {
 			session = new Session(daemon);
 			session.add(service);
 			session.add(this);

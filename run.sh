@@ -1,1 +1,1 @@
-java -jar bin/http.jar -verbose -pass secret
+java -Djava.security.manager -Djava.security.policy=policy -jar bin/http.jar -verbose -pass secret 

@@ -2,6 +2,12 @@ package se.rupy.http;
 
 import java.io.*;
 import java.net.*;
+import java.security.AccessControlContext;
+import java.security.AccessController;
+import java.security.PermissionCollection;
+import java.security.Permissions;
+import java.security.PrivilegedExceptionAction;
+import java.security.ProtectionDomain;
 import java.text.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,6 +34,7 @@ public class Daemon implements Runnable {
 	private String pass;
 	protected PrintStream out, access, error;
 	private static DateFormat DATE;
+	public AccessControlContext control;
 
 	/**
 	 * Don't forget to call {@link #start()}.
@@ -98,6 +105,12 @@ public class Daemon implements Runnable {
 		"true");
 		panel = properties.getProperty("panel", "false").toLowerCase().equals(
 		"true");
+
+		if(host) {
+			PermissionCollection permissions = new Permissions();
+			control = new AccessControlContext(new ProtectionDomain[] {
+					new ProtectionDomain(null, permissions)});
+		}
 
 		if (!verbose) {
 			debug = false;
@@ -265,10 +278,22 @@ public class Daemon implements Runnable {
 			Iterator it = old.service().iterator();
 
 			while (it.hasNext()) {
-				Service service = (Service) it.next();
+				final Service service = (Service) it.next();
 
 				try {
-					service.destroy();
+					if(host) {
+						final Daemon daemon = this;
+
+						AccessController.doPrivileged(new PrivilegedExceptionAction() {
+							public Object run() throws Exception {
+								service.create(daemon);
+								return null;
+							}
+						}, control);
+					}
+					else {
+						service.destroy();
+					}
 				} catch (Exception e) {
 					e.printStackTrace(out);
 				}
@@ -293,10 +318,18 @@ public class Daemon implements Runnable {
 		if(!name.endsWith(".jar")) {
 			name += ".jar";
 		}
-
-		return (Deploy.Archive) this.archive.get(name);
+		
+		Deploy.Archive archive = (Deploy.Archive) this.archive.get(name);
+		
+		if(archive == null) {
+			return fallback;
+		}
+		
+		return archive;
 	}
 
+	Deploy.Archive fallback = new Deploy.Archive();
+	
 	/*
 	 * Listener - Cross class-loader communication interface. So that a class 
 	 * deployed in one archive can send messages to a class deployed in another.
@@ -351,8 +384,19 @@ public class Daemon implements Runnable {
 		add(this.service, service);
 	}
 
-	protected void add(HashMap map, Service service) throws Exception {
-		String path = service.path();
+	protected void add(HashMap map, final Service service) throws Exception {
+		String path = null;
+
+		if(host) {
+			path = (String) AccessController.doPrivileged(new PrivilegedExceptionAction() {
+				public Object run() throws Exception {
+					return service.path();
+				}
+			}, control);
+		}
+		else {
+			path = service.path();
+		}
 
 		if(path == null) {
 			path = "null";
@@ -369,21 +413,52 @@ public class Daemon implements Runnable {
 				map.put(path, chain);
 			}
 
-			Service old = (Service) chain.put(service);
+			final Service old = (Service) chain.put(service);
 
-			if (old != null) {
-				throw new Exception(service.getClass().getName()
-						+ " with path '" + path + "' and index ["
-						+ service.index() + "] is conflicting with "
-						+ old.getClass().getName()
-						+ " for the same path and index.");
+			if(host) {
+				final String p = path;
+				
+				AccessController.doPrivileged(new PrivilegedExceptionAction() {
+					public Object run() throws Exception {
+						if (old != null) {
+							throw new Exception(service.getClass().getName()
+									+ " with path '" + p + "' and index ["
+									+ service.index() + "] is conflicting with "
+									+ old.getClass().getName()
+									+ " for the same path and index.");
+						}
+						
+						return null;
+					}
+				}, control);
+			}
+			else {
+				if (old != null) {
+					throw new Exception(service.getClass().getName()
+							+ " with path '" + path + "' and index ["
+							+ service.index() + "] is conflicting with "
+							+ old.getClass().getName()
+							+ " for the same path and index.");
+				}
 			}
 
 			if (verbose)
 				out.println(path + padding(path) + chain);
 
 			try {
-				service.create(this);
+				if(host) {
+					final Daemon daemon = this;
+
+					Event e = (Event) AccessController.doPrivileged(new PrivilegedExceptionAction() {
+						public Object run() throws Exception {
+							service.create(daemon);
+							return null;
+						}
+					}, control);
+				}
+				else {
+					service.create(this);
+				}
 			} catch (Exception e) {
 				e.printStackTrace(out);
 			}
@@ -400,21 +475,40 @@ public class Daemon implements Runnable {
 		return buffer.toString();
 	}
 
-	protected void verify(Deploy.Archive archive) throws Exception {
+	protected void verify(final Deploy.Archive archive) throws Exception {
 		Iterator it = archive.chain().keySet().iterator();
 
 		while (it.hasNext()) {
-			String path = (String) it.next();
+			final String path = (String) it.next();
 			Chain chain = (Chain) archive.chain().get(path);
 
 			for (int i = 0; i < chain.size(); i++) {
-				Service service = (Service) chain.get(i);
+				final Service service = (Service) chain.get(i);
 
-				if (i != service.index()) {
-					this.archive.remove(archive.name());
-					throw new Exception(service.getClass().getName()
-							+ " with path '" + path + "' has index ["
-							+ service.index() + "] which is too high.");
+				if(host) {
+					final HashMap a = this.archive;
+					final int j = i;
+
+					AccessController.doPrivileged(new PrivilegedExceptionAction() {
+						public Object run() throws Exception {
+							if (j != service.index()) {
+								a.remove(archive.name());
+								throw new Exception(service.getClass().getName()
+										+ " with path '" + path + "' has index ["
+										+ service.index() + "] which is too high.");
+							}
+
+							return null;
+						}
+					}, control);
+				}
+				else {
+					if (i != service.index()) {
+						this.archive.remove(archive.name());
+						throw new Exception(service.getClass().getName()
+								+ " with path '" + path + "' has index ["
+								+ service.index() + "] which is too high.");
+					}
 				}
 			}
 		}
@@ -528,9 +622,14 @@ public class Daemon implements Runnable {
 						+ "- live       \t" + properties.getProperty("live", "false").toLowerCase()
 						.equals("true"));
 
-			if (pass != null && pass.length() > 0) {
-				add(new Deploy("app" + File.separator, pass));
-
+			if (pass != null && pass.length() > 0 || host) {
+				if(host) {
+					add(new Deploy("app" + File.separator));
+				}
+				else {
+					add(new Deploy("app" + File.separator, pass));
+				}
+				
 				File[] app = new File(Deploy.path).listFiles(new Filter());
 
 				if (app != null) {

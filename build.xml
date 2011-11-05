@@ -33,6 +33,8 @@
 	
 	<target name="test" depends="build">
 		<java fork="yes" jar="bin/http.jar">
+			<sysproperty key="java.security.manager" value=""/>
+			<sysproperty key="java.security.policy" value="policy"/>
 			<arg line="-timeout 1"/>
 			<arg line="-threads 1"/>
 			<!--arg line="-verbose"/>

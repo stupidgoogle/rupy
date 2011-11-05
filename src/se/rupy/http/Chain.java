@@ -1,5 +1,14 @@
 package se.rupy.http;
 
+import java.io.File;
+import java.io.FilePermission;
+import java.net.SocketPermission;
+import java.security.AccessControlContext;
+import java.security.AccessController;
+import java.security.PermissionCollection;
+import java.security.Permissions;
+import java.security.PrivilegedExceptionAction;
+import java.security.ProtectionDomain;
 import java.util.*;
 
 /**
@@ -16,7 +25,7 @@ public class Chain extends LinkedList {
 	protected Link put(Link link) {
 		for(int i = 0; i < size(); i++) {
 			Link tmp = (Link) super.get(i);
-			
+
 			if (link.index() == tmp.index()) {
 				return (Link) set(i, link);
 			}
@@ -25,28 +34,58 @@ public class Chain extends LinkedList {
 				return null;
 			}
 		}
-		
+
 		add(link);
-		
+
 		return null;
 	}
 
-	public void filter(Event event) throws Event, Exception {
+	public void filter(final Event event) throws Event, Exception {
 		for (int i = 0; i < size(); i++) {
-			Service service = (Service) get(i);
+			final Service service = (Service) get(i);
 
 			if (event.daemon().timeout > 0) {
 				event.session(service);
 			}
 
-			service.filter(event);
+			if(event.daemon().host) {
+				Object o = AccessController.doPrivileged(new PrivilegedExceptionAction() {
+					public Object run() throws Exception {
+						try {
+							service.filter(event);
+							return event;
+						}
+						catch(Event event) {
+							return new Integer(0);
+						}
+					}
+				}, event.daemon().archive(event.query().header("host")).access());
+
+				if(o instanceof Integer) {
+					throw event;
+				}
+			}
+			else {
+				service.filter(event);
+			}
 		}
 	}
 
-	protected void exit(Session session, int type) throws Exception {
+	protected void exit(final Session session, final int type) throws Exception {
 		for (int i = 0; i < size(); i++) {
-			Service service = (Service) get(i);
-			service.session(session, type);
+			final Service service = (Service) get(i);
+
+			if(session.daemon().host) {
+				AccessController.doPrivileged(new PrivilegedExceptionAction() {
+					public Object run() throws Exception {
+						service.session(session, type);
+						return null;
+					}
+				}, session.daemon().control);
+			}
+			else {
+				service.session(session, type);
+			}
 		}
 	}
 
@@ -66,17 +105,17 @@ public class Chain extends LinkedList {
 	interface Link {
 		public int index();
 	}
-	
+
 	public String toString() {
 		StringBuffer buffer = new StringBuffer();
 		Iterator it = iterator();
 
 		buffer.append('[');
-		
+
 		while(it.hasNext()) {
 			Object object = it.next();
 			String name = object.getClass().getName();
-			
+
 			if(name.equals("se.rupy.http.Event")) {
 				buffer.append(object);
 			}
@@ -91,14 +130,14 @@ public class Chain extends LinkedList {
 				}				
 				buffer.append(name);
 			}
-			
+
 			if(it.hasNext()) {
 				buffer.append(", ");
 			}
 		}
-		
+
 		buffer.append(']');
-		
+
 		return buffer.toString();
 	}
 }
