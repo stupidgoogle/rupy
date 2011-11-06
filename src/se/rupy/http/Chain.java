@@ -7,6 +7,7 @@ import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.security.PermissionCollection;
 import java.security.Permissions;
+import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import java.security.ProtectionDomain;
 import java.util.*;
@@ -49,20 +50,30 @@ public class Chain extends LinkedList {
 			}
 
 			if(event.daemon().host) {
-				Object o = AccessController.doPrivileged(new PrivilegedExceptionAction() {
-					public Object run() throws Exception {
-						try {
-							service.filter(event);
-							return event;
+				try {
+					Object o = AccessController.doPrivileged(new PrivilegedExceptionAction() {
+						public Object run() throws Exception {
+							try {
+								service.filter(event);
+								return null;
+							}
+							catch(Event event) {
+								return event;
+							}
 						}
-						catch(Event event) {
-							return new Integer(0);
-						}
-					}
-				}, event.daemon().archive(event.query().header("host")).access());
+					}, event.daemon().archive(event.query().header("host")).access());
 
-				if(o instanceof Integer) {
-					throw event;
+					if(o != null) {
+						throw (Event) o;
+					}
+				}
+				catch(PrivilegedActionException e) {
+					if(e.getCause() != null) {
+						throw (Exception) e.getCause();
+					}
+					else {
+						throw e;
+					}
 				}
 			}
 			else {
