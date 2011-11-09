@@ -208,4 +208,10 @@ VERSION:
         so you can browse to /panel to get worker and event status 
         to debug locks and leaks.
       
+      0.4.3
+      
+      - Fixed small things here and there.
+      - Added sandboxing for hosted mode. See http://host.rupy.se.
+        This is like 'Google App Engine' but for rupy.
+      
 have fun!
