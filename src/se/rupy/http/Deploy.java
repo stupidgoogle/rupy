@@ -59,9 +59,9 @@ public class Deploy extends Service {
 		if (Deploy.pass == null) {
 			Properties properties = new Properties();
 			properties.load(new FileInputStream(new File("passport")));
-			String host = properties.getProperty(name.substring(0, name.lastIndexOf('.')));
-
-			if (!host.equals(pass)) {
+			String port = properties.getProperty(name.substring(0, name.lastIndexOf('.')));
+			
+			if (!port.equals(pass)) {
 				throw new Failure("Pass verification failed. (" + name + ")");
 			}
 		}
@@ -108,10 +108,12 @@ public class Deploy extends Service {
 
 		Vector classes = new Vector();
 
-		Archive() {
-			// Default archive for inner services access control.
-			
+		Archive() { // Archive for deployment.
 			PermissionCollection permissions = new Permissions();
+			permissions.add(new SocketPermission("*", "listen,accept,resolve,connect"));
+			permissions.add(new FilePermission("-", "read"));
+			permissions.add(new FilePermission("-", "write"));
+			permissions.add(new RuntimePermission("createClassLoader"));
 			access = new AccessControlContext(new ProtectionDomain[] {
 					new ProtectionDomain(null, permissions)});
 		}
@@ -133,13 +135,15 @@ public class Deploy extends Service {
 			}
 			 */
 			if(daemon.host) {
-				host = file.getName().substring(0, file.getName().lastIndexOf('.'));
+				host = name.substring(0, name.lastIndexOf('.'));
+				String path = "app" + File.separator + host + File.separator;
 				PermissionCollection permissions = new Permissions();
-				permissions.add(new SocketPermission("*", "connect"));
-				permissions.add(new FilePermission("app" + File.separator + host + File.separator + "-", "read"));
-				permissions.add(new FilePermission("app" + File.separator + host + File.separator + "-", "write"));
+				permissions.add(new SocketPermission("*", "resolve,connect"));
+				permissions.add(new FilePermission(path + "-", "read"));
+				permissions.add(new FilePermission(path + "-", "write"));
 				access = new AccessControlContext(new ProtectionDomain[] {
 						new ProtectionDomain(null, permissions)});
+				new File(path).mkdirs();
 			}
 			else {
 				host = "content";

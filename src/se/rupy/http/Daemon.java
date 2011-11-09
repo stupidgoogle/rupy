@@ -289,7 +289,7 @@ public class Daemon implements Runnable {
 								service.create(daemon);
 								return null;
 							}
-						}, control);
+						}, archive.access());
 					}
 					else {
 						service.destroy();
@@ -304,7 +304,7 @@ public class Daemon implements Runnable {
 
 		while (it.hasNext()) {
 			Service service = (Service) it.next();
-			add(archive.chain(), service);
+			add(archive.chain(), service, archive);
 		}
 
 		this.archive.put(archive.name(), archive);
@@ -319,16 +319,14 @@ public class Daemon implements Runnable {
 			name += ".jar";
 		}
 		
-		Deploy.Archive archive = (Deploy.Archive) this.archive.get(name);
-		
-		if(archive == null) {
-			return fallback;
+		if(name.equals("host.rupy.se.jar")) {
+			return deployer;
 		}
 		
-		return archive;
+		return (Deploy.Archive) this.archive.get(name);
 	}
 
-	Deploy.Archive fallback = new Deploy.Archive();
+	Deploy.Archive deployer = new Deploy.Archive();
 	
 	/*
 	 * Listener - Cross class-loader communication interface. So that a class 
@@ -381,10 +379,10 @@ public class Daemon implements Runnable {
 	 */
 
 	public void add(Service service) throws Exception {
-		add(this.service, service);
+		add(this.service, service, null);
 	}
 
-	protected void add(HashMap map, final Service service) throws Exception {
+	protected void add(HashMap map, final Service service, Deploy.Archive archive) throws Exception {
 		String path = null;
 
 		if(host) {
@@ -454,7 +452,7 @@ public class Daemon implements Runnable {
 							service.create(daemon);
 							return null;
 						}
-					}, control);
+					}, archive == null ? control : archive.access());
 				}
 				else {
 					service.create(this);
