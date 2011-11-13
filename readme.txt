@@ -213,5 +213,7 @@ VERSION:
       - Fixed small things here and there.
       - Added sandboxing for hosted mode. See http://host.rupy.se.
         This is like 'Google App Engine' but for rupy.
+      - Switched content and service order in event filtering.
+        This way a service can mask a file in order to protect it.
       
 have fun!

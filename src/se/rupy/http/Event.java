@@ -218,7 +218,7 @@ public class Event extends Throwable implements Chain.Link {
 		if (query.version() == null || !query.version().equalsIgnoreCase("HTTP/1.1")) {
 			reply.code("505 Not Supported");
 		}
-		else if (!content() && !service()) {
+		else if (!service() && !content()) {
 			reply.code("404 Not Found");
 			reply.output().print(
 					"<pre>'" + query.path() + "' was not found.</pre>");
@@ -273,7 +273,7 @@ public class Event extends Throwable implements Chain.Link {
 		if (chain == null) {
 			chain = daemon.chain("null");
 
-			if(chain == null)
+			if (chain == null)
 				return false;
 		}
 

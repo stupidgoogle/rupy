@@ -319,14 +319,14 @@ public class Daemon implements Runnable {
 			name += ".jar";
 		}
 		
+		//System.out.println(name);
+		
 		if(name.equals("host.rupy.se.jar")) {
-			return deployer;
+			return Deploy.Archive.deployer;
 		}
 		
 		return (Deploy.Archive) this.archive.get(name);
 	}
-
-	Deploy.Archive deployer = new Deploy.Archive();
 	
 	/*
 	 * Listener - Cross class-loader communication interface. So that a class 

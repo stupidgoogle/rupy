@@ -138,7 +138,7 @@ public class Deploy extends Service {
 				host = name.substring(0, name.lastIndexOf('.'));
 				String path = "app" + File.separator + host + File.separator;
 				PermissionCollection permissions = new Permissions();
-				permissions.add(new SocketPermission("*", "resolve,connect"));
+				permissions.add(new SocketPermission("localhost", "resolve,connect"));
 				permissions.add(new FilePermission(path + "-", "read"));
 				permissions.add(new FilePermission(path + "-", "write"));
 				access = new AccessControlContext(new ProtectionDomain[] {
@@ -234,6 +234,8 @@ public class Deploy extends Service {
 			}
 		}
 
+		static Deploy.Archive deployer = new Deploy.Archive();
+		
 		protected AccessControlContext access() {
 			return access;
 		}
