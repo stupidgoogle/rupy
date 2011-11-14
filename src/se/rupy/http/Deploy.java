@@ -46,6 +46,7 @@ public class Deploy extends Service {
 
 	public void filter(Event event) throws Event, Exception {
 		String name = event.query().header("file");
+		String size = event.query().header("size");
 		String pass = event.query().header("pass");
 
 		if (name == null) {
@@ -57,6 +58,10 @@ public class Deploy extends Service {
 		}
 
 		if (Deploy.pass == null) {
+			if(Integer.parseInt(size) > 2097152) {
+				throw new Exception("Maximum deployable size is 2MB.");
+			}
+			
 			Properties properties = new Properties();
 			properties.load(new FileInputStream(new File("passport")));
 			String port = properties.getProperty(name.substring(0, name.lastIndexOf('.')));
@@ -83,7 +88,7 @@ public class Deploy extends Service {
 			}
 			catch(IOException e) {
 				file.delete();
-				throw new Exception("Maximum deployable size is 2MB.");
+				throw e;
 			}
 		}
 		else {
@@ -406,7 +411,8 @@ public class Deploy extends Service {
 
 			if (file != null) {
 				conn.addRequestProperty("File", file.getName());
-
+				conn.addRequestProperty("Size", "" + file.length());
+				
 				if (pass != null) {
 					conn.addRequestProperty("Pass", pass);
 				}
