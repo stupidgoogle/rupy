@@ -61,8 +61,8 @@ public class Deploy extends Service {
 			properties.load(new FileInputStream(new File("passport")));
 			String port = properties.getProperty(name.substring(0, name.lastIndexOf('.')));
 			
-			if (!port.equals(pass)) {
-				throw new Failure("Pass verification failed. (" + name + ")");
+			if (port == null || !port.equals(pass)) {
+				throw new Exception("Pass verification failed. (" + name + ")");
 			}
 		}
 		else {
@@ -77,7 +77,18 @@ public class Deploy extends Service {
 		OutputStream out = new FileOutputStream(file);
 		InputStream in = event.query().input();
 
-		pipe(in, out, 1024);
+		if (Deploy.pass == null) {
+			try {
+				pipe(in, out, 1024, 2097152); // 2MB limit
+			}
+			catch(IOException e) {
+				file.delete();
+				throw new Exception("Maximum deployable size is 2MB.");
+			}
+		}
+		else {
+			pipe(in, out, 1024);
+		}
 
 		out.flush();
 		out.close();
@@ -113,6 +124,7 @@ public class Deploy extends Service {
 			permissions.add(new SocketPermission("*", "listen,accept,resolve,connect"));
 			permissions.add(new FilePermission("-", "read"));
 			permissions.add(new FilePermission("-", "write"));
+			permissions.add(new FilePermission("-", "delete"));
 			permissions.add(new RuntimePermission("createClassLoader"));
 			access = new AccessControlContext(new ProtectionDomain[] {
 					new ProtectionDomain(null, permissions)});
@@ -141,6 +153,7 @@ public class Deploy extends Service {
 				permissions.add(new SocketPermission("localhost", "resolve,connect"));
 				permissions.add(new FilePermission(path + "-", "read"));
 				permissions.add(new FilePermission(path + "-", "write"));
+				permissions.add(new FilePermission(path + "-", "delete"));
 				access = new AccessControlContext(new ProtectionDomain[] {
 						new ProtectionDomain(null, permissions)});
 				new File(path).mkdirs();
