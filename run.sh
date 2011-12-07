@@ -1,1 +1,1 @@
-java -jar bin/http.jar -verbose -pass secret 
+java -classpath bin/http.jar se.rupy.http.Daemon -verbose -pass secret 

@@ -58,7 +58,7 @@ public class Event extends Throwable implements Chain.Link {
 
 	protected Event(Daemon daemon, SelectionKey key, int index) throws IOException {
 		touch();
-		
+
 		channel = ((ServerSocketChannel) key.channel()).accept();
 		channel.configureBlocking(false);
 
@@ -68,10 +68,10 @@ public class Event extends Throwable implements Chain.Link {
 
 		query = new Query(this);
 		reply = new Reply(this);
-		
+
 		key = channel.register(key.selector(), READ, this);
 		key.selector().wakeup();
-		
+
 		this.key = key;
 	}
 
@@ -208,20 +208,26 @@ public class Event extends Throwable implements Chain.Link {
 
 	protected void read() throws IOException {
 		touch();
-		
+
 		if (!query.headers()) {		
 			disconnect(null);
 		}
-		
+
 		remote = address();
 
 		if (query.version() == null || !query.version().equalsIgnoreCase("HTTP/1.1")) {
 			reply.code("505 Not Supported");
 		}
-		else if (!service() && !content()) {
-			reply.code("404 Not Found");
-			reply.output().print(
-					"<pre>'" + query.path() + "' was not found.</pre>");
+		else {
+			if(!service(daemon.chain(query))) {
+				if(!content()) {
+					if(!service(daemon.chain("null"))) {
+						reply.code("404 Not Found");
+						reply.output().print(
+							"<pre>'" + query.path() + "' was not found.</pre>");
+					}
+				}
+			}
 		}
 
 		finish();
@@ -267,16 +273,10 @@ public class Event extends Throwable implements Chain.Link {
 		return true;
 	}
 
-	protected boolean service() throws IOException {
-		Chain chain = daemon.chain(query);
-
-		if (chain == null) {
-			chain = daemon.chain("null");
-
-			if (chain == null)
-				return false;
-		}
-
+	protected boolean service(Chain chain) throws IOException {
+		if(chain == null)
+			return false;
+		
 		try {
 			chain.filter(this);
 		} catch (Failure f) {
@@ -303,7 +303,7 @@ public class Event extends Throwable implements Chain.Link {
 
 	protected void write() throws IOException {
 		touch();
-		service();
+		service(daemon.chain(query));
 		finish();
 	}
 
@@ -440,20 +440,20 @@ public class Event extends Throwable implements Chain.Link {
 		}
 
 		int index = 0;
-		
+
 		if(daemon.host) {
 			Integer i = (Integer) AccessController.doPrivileged(new PrivilegedExceptionAction() {
 				public Object run() throws Exception {
 					return new Integer(service.index());
 				}
 			}, daemon.control);
-			
+
 			index = i.intValue();
 		}
 		else {
 			index = service.index();
 		}
-		
+
 		if(index == 0 && !push()) {
 			session = new Session(daemon);
 			session.add(service);
@@ -538,7 +538,7 @@ public class Event extends Throwable implements Chain.Link {
 	 */
 	public void touch() {
 		touch = System.currentTimeMillis();
-		
+
 		if(worker != null) {
 			worker.touch();
 		}
@@ -547,7 +547,7 @@ public class Event extends Throwable implements Chain.Link {
 	protected long last() {
 		return touch;
 	}
-	
+
 	/**
 	 * Keeps the chunked reply open for asynchronous writes. If you are 
 	 * streaming data and you need to send something upon the first request 
