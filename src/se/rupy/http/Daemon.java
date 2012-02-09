@@ -282,11 +282,11 @@ public class Daemon implements Runnable {
 
 				try {
 					if(host) {
-						final Daemon daemon = this;
+						//final Daemon daemon = this;
 
 						AccessController.doPrivileged(new PrivilegedExceptionAction() {
 							public Object run() throws Exception {
-								service.create(daemon);
+								service.destroy();
 								return null;
 							}
 						}, archive.access());
