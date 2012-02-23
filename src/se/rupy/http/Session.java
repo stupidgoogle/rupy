@@ -26,7 +26,7 @@ public class Session extends Hash {
 		touch();
 	}
 
-	protected void add(Service service) {
+	protected synchronized void add(Service service) {
 		if (!this.service.contains(service)) {
 			this.service.add(service);
 		}
@@ -50,7 +50,7 @@ public class Session extends Hash {
 		remove(null);
 	}
 
-	protected boolean remove(Event event) throws Exception {
+	protected synchronized boolean remove(Event event) throws Exception {
 		if (event == null) {
 			this.event.clear();
 			service.exit(this, Service.TIMEOUT);

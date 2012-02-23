@@ -215,5 +215,6 @@ VERSION:
         This is like 'Google App Engine' but for rupy.
       - Switched content and service order in event filtering.
         This way a service can mask a file in order to protect it.
+      - NullPointerException fix under high load by hbaghdas.
       
 have fun!
