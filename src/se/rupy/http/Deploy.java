@@ -58,7 +58,7 @@ public class Deploy extends Service {
 		}
 
 		if (Deploy.pass == null) {
-			if(Integer.parseInt(size) > 2097152) {
+			if(size != null && size.length() > 0 && Integer.parseInt(size) > 2097152) {
 				throw new Exception("Maximum deployable size is 2MB.");
 			}
 			

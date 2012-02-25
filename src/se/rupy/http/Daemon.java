@@ -308,6 +308,10 @@ public class Daemon implements Runnable {
 		}
 
 		this.archive.put(archive.name(), archive);
+		
+		if(this.host && archive.name().startsWith("www.")) {
+			this.archive.put(archive.name().substring(4), archive);
+		}
 	}
 
 	/**
@@ -318,8 +322,6 @@ public class Daemon implements Runnable {
 		if(!name.endsWith(".jar")) {
 			name += ".jar";
 		}
-		
-		//System.out.println(name);
 		
 		if(name.equals("host.rupy.se.jar")) {
 			return Deploy.Archive.deployer;
@@ -530,6 +532,10 @@ public class Daemon implements Runnable {
 
 		if(file.exists() && !file.isDirectory()) {
 			return new Deploy.Big(file);
+		}
+		
+		if(this.host) {
+			return content("www." + host, path);
 		}
 
 		return null;
