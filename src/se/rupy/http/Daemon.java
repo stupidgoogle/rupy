@@ -308,10 +308,6 @@ public class Daemon implements Runnable {
 		}
 
 		this.archive.put(archive.name(), archive);
-		
-		if(this.host && archive.name().startsWith("www.")) {
-			this.archive.put(archive.name().substring(4), archive);
-		}
 	}
 
 	/**
@@ -322,14 +318,26 @@ public class Daemon implements Runnable {
 		if(!name.endsWith(".jar")) {
 			name += ".jar";
 		}
-		
-		if(name.equals("host.rupy.se.jar")) {
-			return Deploy.Archive.deployer;
+
+		if(host) {
+			if(name.equals("host.rupy.se.jar")) {
+				return Deploy.Archive.deployer;
+			}
+			
+			Deploy.Archive archive = (Deploy.Archive) this.archive.get(name);
+			
+			if(archive == null) {
+				return (Deploy.Archive) this.archive.get("www." + name);
+			}
+			else {
+				return archive;
+			}
 		}
-		
-		return (Deploy.Archive) this.archive.get(name);
+		else {
+			return (Deploy.Archive) this.archive.get(name);
+		}
 	}
-	
+
 	/*
 	 * Listener - Cross class-loader communication interface. So that a class 
 	 * deployed in one archive can send messages to a class deployed in another.
@@ -417,7 +425,7 @@ public class Daemon implements Runnable {
 
 			if(host) {
 				final String p = path;
-				
+
 				AccessController.doPrivileged(new PrivilegedExceptionAction() {
 					public Object run() throws Exception {
 						if (old != null) {
@@ -427,7 +435,7 @@ public class Daemon implements Runnable {
 									+ old.getClass().getName()
 									+ " for the same path and index.");
 						}
-						
+
 						return null;
 					}
 				}, control);
@@ -533,9 +541,13 @@ public class Daemon implements Runnable {
 		if(file.exists() && !file.isDirectory()) {
 			return new Deploy.Big(file);
 		}
-		
+
 		if(this.host) {
-			return content("www." + host, path);
+			file = new File("app" + File.separator + "www." + host + File.separator + path);
+
+			if(file.exists() && !file.isDirectory()) {
+				return new Deploy.Big(file);
+			}
 		}
 
 		return null;
@@ -564,16 +576,33 @@ public class Daemon implements Runnable {
 		}
 
 		synchronized (this.archive) {
-			Iterator it = this.archive.values().iterator();
+			if(this.host) {
+				Deploy.Archive archive = (Deploy.Archive) this.archive.get(host + ".jar");
 
-			while (it.hasNext()) {
-				Deploy.Archive archive = (Deploy.Archive) it.next();
+				if(archive == null) {
+					archive = (Deploy.Archive) this.archive.get("www." + host + ".jar");
+				}
 
-				if (archive.host().equals(host)) {
+				if(archive != null) {
 					Chain chain = (Chain) archive.chain().get(path);
 
 					if (chain != null) {
 						return chain;
+					}
+				}
+			}
+			else {
+				Iterator it = this.archive.values().iterator();
+
+				while (it.hasNext()) {
+					Deploy.Archive archive = (Deploy.Archive) it.next();
+
+					if (archive.host().equals(host)) {
+						Chain chain = (Chain) archive.chain().get(path);
+
+						if (chain != null) {
+							return chain;
+						}
 					}
 				}
 			}
@@ -633,7 +662,7 @@ public class Daemon implements Runnable {
 				else {
 					add(new Deploy("app" + File.separator, pass));
 				}
-				
+
 				File[] app = new File(Deploy.path).listFiles(new Filter());
 
 				if (app != null) {
