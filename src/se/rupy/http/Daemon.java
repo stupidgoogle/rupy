@@ -28,7 +28,7 @@ public class Daemon implements Runnable {
 	private int selected, valid, accept, readwrite; // panel stats
 	private HashMap archive, service;
 	protected ConcurrentHashMap events, session;
-	private Chain workers, queue;
+	protected Chain workers, queue;
 	private Heart heart;
 	private Selector selector;
 	private String pass;
@@ -723,14 +723,15 @@ public class Daemon implements Runnable {
 		while (alive) {
 			try {
 				selector.select();
+				
 				Set set = selector.selectedKeys();
 				int valid = 0, accept = 0, readwrite = 0, selected = set.size();
 				Iterator it = set.iterator();
-
+				
 				while (it.hasNext()) {
 					key = (SelectionKey) it.next();
 					it.remove();
-
+					
 					if (key.isValid()) {
 						valid++;
 						if (key.isAcceptable()) {
@@ -756,7 +757,7 @@ public class Daemon implements Runnable {
 										event.log("write ---");
 								}
 							}
-
+							
 							if (key.isReadable() && event.push()) {
 								event.disconnect(null);
 							} else if (worker == null) {
@@ -828,7 +829,7 @@ public class Daemon implements Runnable {
 		while (worker.busy()) {
 			worker = (Worker) workers.next();
 
-			if (worker == null) {
+			if (worker == null) {				
 				queue(event);
 				return;
 			}
