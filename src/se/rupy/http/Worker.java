@@ -135,12 +135,7 @@ public class Worker implements Runnable, Chain.Link {
 			lock = (int) (System.currentTimeMillis() - touch);
 
 			if(lock > daemon.delay) {
-				Event tmp = event;
-				
-				event = null;
-				
-				reset(tmp, new Exception("Threadlock " + lock + " (" + tmp.query().path() + ")"));
-				
+				reset(new Exception("Threadlock " + lock + " (" + event.query().path() + ")"));
 				return false;
 			}
 
@@ -174,13 +169,12 @@ public class Worker implements Runnable, Chain.Link {
 				if (event != null) {
 					if (event.push()) {
 						event.write();
-						//event.push(false);
 					} else {
 						event.read();
 					}
 				}
 			} catch (Exception e) {
-				reset(event, e);
+				reset(e);
 			} finally {
 				if (event != null) {
 					event.worker(null);
@@ -192,24 +186,16 @@ public class Worker implements Runnable, Chain.Link {
 						snooze();
 					}
 				} else {
-					if(daemon.queue.size() > 0) {
-						event = daemon.next(this);
-
-						if (event != null) {
-							event.worker(this);
-						}
-					}
-					else {
-						snooze();
-					}
+					snooze();
 				}
 			}
 		}
 	}
 
-	protected void reset(Event ev, Exception ex) {
-		if(ev != null) {
-			ev.disconnect(ex);
+	protected void reset(Exception ex) {
+		if(event != null) {
+			event.disconnect(ex);
+			event = null;
 		}
 
 		out.clear();
