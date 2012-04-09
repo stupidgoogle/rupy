@@ -217,4 +217,8 @@ VERSION:
         This way a service can mask a file in order to protect it.
       - NullPointerException fix under high load by hbaghdas.
       
+      0.4.4
+      
+      - Fixed a rare deadlock due to events timing out.
+      
 have fun!
