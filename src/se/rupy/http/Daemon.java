@@ -813,11 +813,13 @@ public class Daemon implements Runnable {
 	}
 
 	protected synchronized void employ(Event event) {
-		//if(queue.size() > 0) {
-		//	queue(event);
-		//	return;
-		//}
-
+		/*
+		if(queue.size() > 0) {
+			queue(event);
+			return;
+		}
+		 */
+		
 		workers.reset();
 		Worker worker = (Worker) workers.next();
 
@@ -830,6 +832,7 @@ public class Daemon implements Runnable {
 			worker = (Worker) workers.next();
 
 			if (worker == null) {
+				access.print('.');
 				queue(event);
 				return;
 			}

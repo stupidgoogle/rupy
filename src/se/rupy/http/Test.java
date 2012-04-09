@@ -3,18 +3,6 @@ package se.rupy.http;
 import java.io.*;
 import java.net.*;
 
-/* TODO: On some platforms if chunk, fixed, 
- * and error finishes before comet the test 
- * will lock.
- * 
- * Anyhow on my computers rupy pushed ~75MB over 
- * 905 requests with 1-2 threads in the following 
- * time.
- * 
- * Threads			 1		 2
- * ThinkPad X100e	~10s	~10s
- * ThinkPad X61s	~6s		~4s
- */
 class Test implements Runnable {
 	final static String intro = 
 		"Parallel testing with one worker thread:" + Output.EOL + 
@@ -26,14 +14,13 @@ class Test implements Runnable {
 		"which is ~60kb, if you wonder why it takes time." + Output.EOL + 
 		"             ---o---";
 
-	final static int other_count = 300;
-	final static int comet_count = 5;
-	final static int comet_sleep = 30;
+	final static int[] count = {5, 30, 30, 30 , 1};
 	final static String[] unit = new String[] {
 		"comet", 
 		"chunk", 
 		"fixed", 
-		"error"
+		"error", 
+		"never"
 	};
 
 	final static String original = "bin/http.jar";
@@ -85,7 +72,13 @@ class Test implements Runnable {
 		System.out.println(done + "/" + (unit.length + 2) + " Done: " + test.name + " (" + test.loop + ")");
 
 		if(http == unit.length) {
-			System.out.println((3 * other_count * loop + comet_count * loop) + " dynamic requests in " + (System.currentTimeMillis() - time) + " ms.");
+			int count = 0;
+			
+			for(int i = 0; i < this.count.length; i++) {
+				count += this.count[i];
+			}
+			
+			System.out.println(count + " dynamic requests in " + (System.currentTimeMillis() - time) + " ms.");
 		}
 
 		done();
@@ -142,6 +135,16 @@ class Test implements Runnable {
 		} catch (ConnectException ce) {
 			System.out.println("Connection failed, is there a server on "
 					+ host + "?");
+		} catch (SocketException se) {
+			/*
+			 * FORCED, HttpURLConnection timeout, has the time to happen
+			 * sometimes. This SHOULD happen for "never" test.
+			 */
+			System.out.println("Socket closed. (/" + name + ")");
+			
+			if(!name.equals("never")) {
+				failed = true;
+			}
 		} catch (Throwable e) {
 			e.printStackTrace();
 			failed = true;
@@ -176,7 +179,7 @@ class Test implements Runnable {
 		Test[] test = new Test[unit.length];
 
 		for(int i = 0; i < test.length; i++) {
-			test[i] = new Test("localhost:" + daemon.port, unit[i], loop * (unit[i].equals("comet") ? comet_count : other_count));
+			test[i] = new Test("localhost:" + daemon.port, unit[i], loop * count[i]);
 			daemon.add(test[i].service());
 			Thread thread = new Thread(test[i]);
 			thread.start();
@@ -208,6 +211,8 @@ class Test implements Runnable {
 			if(error.indexOf("Error successful") == -1) {
 				failed = true;
 			}
+		} else if(name.equals("never")) {
+			((HttpURLConnection) url.openConnection()).getResponseCode();
 		} else {
 			save(name, new Deploy.Client().send(url, file, null, true));
 		}
@@ -248,7 +253,7 @@ class Test implements Runnable {
 			} else {
 				/*
 				 * FORCED, HttpURLConnection timeout, has the time to happen
-				 * sometimes.
+				 * sometimes. This SHOULD happen for "never" test.
 				 */
 				System.out.println("Socket closed. (" + path + ")");
 			}
@@ -274,7 +279,10 @@ class Test implements Runnable {
 			//	System.out.println(event.push());
 			//}
 
-			if (path.equals("/chunk")) {
+			if (path.equals("/never")) {
+				event.output().println("never");
+				Thread.sleep(500);
+			} else if (path.equals("/chunk")) {
 				load(event);
 				write(event.output());
 			} else if (path.equals("/fixed")) {
@@ -306,7 +314,7 @@ class Test implements Runnable {
 
 		public void run() {
 			try {
-				Thread.sleep(comet_sleep);
+				Thread.sleep(30);
 				event.reply().wakeup();
 			} catch (Exception e) {
 				e.printStackTrace();

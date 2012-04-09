@@ -186,7 +186,18 @@ public class Worker implements Runnable, Chain.Link {
 						snooze();
 					}
 				} else {
-					snooze();
+					if(daemon.queue.size() > 0) {
+						event = daemon.next(this);
+
+						if (event != null) {
+							event.worker(this);
+						} else {
+							snooze();
+						}
+					}
+					else {
+						snooze();
+					}
 				}
 			}
 		}
