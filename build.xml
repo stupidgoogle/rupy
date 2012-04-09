@@ -41,7 +41,7 @@
 			<arg line="-debug"/-->
 			<arg line="-test"/>
 			<!--arg line="-host"/-->
-			<arg line="-delay 50"/>
+			<arg line="-delay 100"/>
 		</java>
 	</target>
 

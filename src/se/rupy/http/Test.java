@@ -142,10 +142,6 @@ class Test implements Runnable {
 			 * sometimes. This SHOULD happen for "never" test.
 			 */
 			System.out.println("Socket closed. (/" + name + ")");
-			
-			if(!name.equals("never")) {
-				failed = true;
-			}
 		} catch (Throwable e) {
 			e.printStackTrace();
 			failed = true;
@@ -194,6 +190,7 @@ class Test implements Runnable {
 
 		for(int i = 0; i < test.length; i++) {
 			if(test[i].failed()) {
+				System.out.println(test[i].name);
 				failed = true;
 			}
 
@@ -230,6 +227,10 @@ class Test implements Runnable {
 
 		public Service(String name) {
 			this.path = "/" + name;
+			
+			if(name.equals("never")) {
+				failed = true;
+			}
 		}
 
 		public String path() {
@@ -257,6 +258,11 @@ class Test implements Runnable {
 				 * sometimes. This SHOULD happen for "never" test.
 				 */
 				System.out.println("Socket closed. (" + path + ")");
+				
+				if(path.equals("/never")) {
+					System.out.println("OK");
+					failed = false;
+				}
 			}
 		}
 
