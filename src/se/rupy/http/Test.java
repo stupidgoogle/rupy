@@ -12,7 +12,7 @@ class Test implements Runnable {
 		"- Exception handling." + Output.EOL + 
 		"- Worker timeout." + Output.EOL + 
 		"NOTICE: The test receives and sends the bin/http.jar" + Output.EOL + 
-		"which is ~60kb, if you wonder why it takes time." + Output.EOL + 
+		"which is ~70kb, if you wonder why it takes time." + Output.EOL + 
 		"             ---o---";
 
 	final static int[] count = {5, 30, 30, 30 , 1};
