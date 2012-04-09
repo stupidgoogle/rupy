@@ -10,6 +10,7 @@ class Test implements Runnable {
 		"- Asynchronous non-blocking reply." + Output.EOL + 
 		"- Session creation and timeout." + Output.EOL + 
 		"- Exception handling." + Output.EOL + 
+		"- Worker timeout." + Output.EOL + 
 		"NOTICE: The test receives and sends the bin/http.jar" + Output.EOL + 
 		"which is ~60kb, if you wonder why it takes time." + Output.EOL + 
 		"             ---o---";
