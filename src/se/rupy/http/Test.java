@@ -53,6 +53,10 @@ class Test implements Runnable {
 		this.name = name;
 		this.loop = loop;
 		this.service = new Service(name);
+		
+		if(name.equals("never")) {
+			failed = true;
+		}
 	}
 
 	protected Service service() {
@@ -141,7 +145,12 @@ class Test implements Runnable {
 			 * FORCED, HttpURLConnection timeout, has the time to happen
 			 * sometimes. This SHOULD happen for "never" test.
 			 */
-			System.out.println("Socket closed. (/" + name + ")");
+			if(name.equals("never")) {
+				failed = false;
+			}
+			else {
+				System.out.println("Socket closed. (/" + name + ")");
+			}
 		} catch (Throwable e) {
 			e.printStackTrace();
 			failed = true;
@@ -245,23 +254,23 @@ class Test implements Runnable {
 			if (type == Service.CREATE) {
 				if (!Service.session) {
 					Service.session = true;
-					test.done("Session successful.");
+					test.done("session (1)");
 				}
 			} else if (type == Service.TIMEOUT) {
 				if (!Service.timeout) {
 					Service.timeout = true;
-					test.done("Timeout successful.");
+					test.done("timeout (1)");
 				}
 			} else {
 				/*
 				 * FORCED, HttpURLConnection timeout, has the time to happen
 				 * sometimes. This SHOULD happen for "never" test.
 				 */
-				System.out.println("Socket closed. (" + path + ")");
-				
 				if(path.equals("/never")) {
-					System.out.println("OK");
 					failed = false;
+				}
+				else {
+					System.out.println("Socket closed. (" + path + ")");
 				}
 			}
 		}
@@ -287,8 +296,8 @@ class Test implements Runnable {
 			//}
 
 			if (path.equals("/never")) {
-				event.output().println("never");
-				Thread.sleep(500);
+				event.output();
+				Thread.sleep(1000);
 			} else if (path.equals("/chunk")) {
 				load(event);
 				write(event.output());

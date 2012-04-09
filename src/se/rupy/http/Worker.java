@@ -136,6 +136,7 @@ public class Worker implements Runnable, Chain.Link {
 
 			if(lock > daemon.delay) {
 				reset(new Exception("Threadlock " + lock + " (" + event.query().path() + ")"));
+				event = null;
 				return false;
 			}
 
@@ -206,7 +207,6 @@ public class Worker implements Runnable, Chain.Link {
 	protected void reset(Exception ex) {
 		if(event != null) {
 			event.disconnect(ex);
-			event = null;
 		}
 
 		out.clear();

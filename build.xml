@@ -34,14 +34,14 @@
 	<target name="test" depends="build">
 		<java fork="yes" jar="bin/http.jar">
 			<!--sysproperty key="java.security.manager" value=""/>
-			<sysproperty key="java.security.policy" value="policy"/-->
+			<sysproperty key="java.security.policy" value="policy"/>
+			<arg line="-host"/>
+			<arg line="-verbose"/>
+			<arg line="-debug"/-->
 			<arg line="-timeout 1"/>
 			<arg line="-threads 1"/>
-			<!--arg line="-verbose"/>
-			<arg line="-debug"/-->
+			<arg line="-delay 60"/>
 			<arg line="-test"/>
-			<!--arg line="-host"/-->
-			<arg line="-delay 100"/>
 		</java>
 	</target>
 

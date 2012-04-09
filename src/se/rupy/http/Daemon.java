@@ -819,7 +819,6 @@ public class Daemon implements Runnable {
 			return;
 		}
 		 */
-		
 		workers.reset();
 		Worker worker = (Worker) workers.next();
 
@@ -832,7 +831,6 @@ public class Daemon implements Runnable {
 			worker = (Worker) workers.next();
 
 			if (worker == null) {
-				access.print('.');
 				queue(event);
 				return;
 			}
