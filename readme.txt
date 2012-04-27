@@ -219,6 +219,6 @@ VERSION:
       
       0.4.4
       
-      - Fixed deadlock due to events timing out.
+      - Fixed deadlock due to all events timing out at the same time.
         
 have fun!
