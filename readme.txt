@@ -219,12 +219,6 @@ VERSION:
       
       0.4.4
       
-      - Fixed deadlock due to events timing out. If you see Threadlock 
-        message in log/error.txt, and you know these to be caused by YOUR 
-        code being slow (for example slow database query) your server might 
-        lock if there are the same amount of concurrent locking requests as 
-        there are worker threads. Unfortunately there is no way around this.
-        
-        Your only real alternative is to improve execution speed of your code.
+      - Fixed deadlock due to events timing out.
         
 have fun!
