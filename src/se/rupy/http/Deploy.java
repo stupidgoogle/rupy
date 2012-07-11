@@ -61,11 +61,11 @@ public class Deploy extends Service {
 			if(size != null && size.length() > 0 && Integer.parseInt(size) > 2097152) {
 				throw new Exception("Maximum deployable size is 2MB.");
 			}
-			
+
 			Properties properties = new Properties();
 			properties.load(new FileInputStream(new File("passport")));
 			String port = properties.getProperty(name.substring(0, name.lastIndexOf('.')));
-			
+
 			if (port == null || !port.equals(pass)) {
 				throw new Exception("Pass verification failed. (" + name + ")");
 			}
@@ -98,7 +98,17 @@ public class Deploy extends Service {
 		out.flush();
 		out.close();
 
-		event.reply().output().print("Application '" + deploy(event.daemon(), file) + "' deployed.");
+		try {
+			event.reply().output().print("Application '" + deploy(event.daemon(), file) + "' deployed.");
+		}
+		catch(Error e) {
+			StringWriter trace = new StringWriter();
+			PrintWriter print = new PrintWriter(trace);
+			e.printStackTrace(print);
+
+			event.reply().code("500 Internal Server Error");
+			event.reply().output().print("<pre>" + trace.toString() + "</pre>");
+		}
 	}
 
 	public static String deploy(Daemon daemon, File file) throws Exception {
@@ -134,7 +144,7 @@ public class Deploy extends Service {
 			access = new AccessControlContext(new ProtectionDomain[] {
 					new ProtectionDomain(null, permissions)});
 		}
-		
+
 		Archive(Daemon daemon, File file) throws Exception {
 			service = new HashSet();
 			chain = new HashMap();
@@ -255,7 +265,7 @@ public class Deploy extends Service {
 		}
 
 		static Deploy.Archive deployer = new Deploy.Archive();
-		
+
 		protected AccessControlContext access() {
 			return access;
 		}
@@ -414,7 +424,7 @@ public class Deploy extends Service {
 			if (file != null) {
 				conn.addRequestProperty("File", file.getName());
 				conn.addRequestProperty("Size", "" + file.length());
-				
+
 				if (pass != null) {
 					conn.addRequestProperty("Pass", pass);
 				}
