@@ -159,7 +159,7 @@ public class Deploy extends Service {
 				permissions.add(new FilePermission(path + "-", "read"));
 				permissions.add(new FilePermission(path + "-", "write"));
 				permissions.add(new FilePermission(path + "-", "delete"));
-				permissions.add(new FilePermission(System.getProperty("user.dir") + File.separator + "res" + File.separator + "-", "read"));
+				permissions.add(new FilePermission("res" + File.separator + "-", "read"));
 				permissions.add(new PropertyPermission("user.dir", "read"));
 				access = new AccessControlContext(new ProtectionDomain[] {
 						new ProtectionDomain(null, permissions)});

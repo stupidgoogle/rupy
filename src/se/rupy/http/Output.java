@@ -167,7 +167,7 @@ public abstract class Output extends OutputStream implements Event.Block {
 						+ reply.event().worker().date().format(new Date(session
 								.expires())) + ";" : "")
 								+ (session.domain() != null ? " domain=" + session.domain()
-										+ ";" : "") + " path=/;";
+										+ ";" : "") + " path=/";
 
 			wrote((cookie + EOL).getBytes());
 
@@ -299,6 +299,7 @@ public abstract class Output extends OutputStream implements Event.Block {
 
 		try {
 			sent = reply.event().channel().write(out);
+			//reply.event().touch();
 		}
 		catch(IOException e) {
 			throw (Failure.Close) new Failure.Close().initCause(e); // Connection reset by peer

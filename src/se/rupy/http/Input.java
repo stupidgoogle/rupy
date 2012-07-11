@@ -104,6 +104,7 @@ public abstract class Input extends InputStream implements Event.Block {
 
 		try {
 			available = event.channel().read(buffer);
+			//event.touch();
 		}
 		catch(IOException e) {
 			throw (Failure.Close) new Failure.Close().initCause(e); // Connection reset by peer
