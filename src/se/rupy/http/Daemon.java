@@ -919,7 +919,7 @@ public class Daemon implements Runnable {
 					while(it.hasNext()) {
 						Event event = (Event) it.next();
 
-						if(System.currentTimeMillis() - event.last() > 300000) {
+						if(System.currentTimeMillis() - event.last() > timeout) {
 							event.disconnect(null);
 						}
 					}

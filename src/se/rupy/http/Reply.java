@@ -18,21 +18,26 @@ import java.util.*;
  */
 public class Reply {
 	/**
+	 * If the reply has a thread writing already. You have to wait until it finishes.
+	 */
+	public static int WORKING = -1;
+	
+	/**
 	 * The reply was successfully awakened.
 	 */
 	public static int OK = 0;
 	
 	/**
 	 * If the reply has been completed. This means the {@link Event} is no longer available 
-	 * for wakeup and should probably be removed from the list;
+	 * for wakeup and should probably be removed from the list.
 	 */
 	public static int COMPLETE = 1;
 	
 	/**
-	 * If the reply is processing another request. You will then have to wait for the thread 
-	 * to complete.
+	 * If the reply has been closed, try increasing timeout variable. This means the {@link 
+	 * Event} is no longer available for wakeup and should probably be removed from the list.
 	 */
-	public static int PROCESSING = 2;
+	public static int CLOSED = 2;
 	
 	private String type = "text/html; charset=UTF-8";
 	private HashMap headers;
@@ -182,12 +187,16 @@ public class Reply {
 	 * @return The status of the wakeup call. {@link Reply#OK}, {@link Reply#COMPLETE} or {@link Reply#PROCESSING}
 	 */
 	public int wakeup() {
+		if (event.worker() != null) {
+			return WORKING;
+		}
+		
 		if (output.complete()) {
 			return COMPLETE;
 		}
-
-		if (event.worker() != null) {
-			return PROCESSING;
+		
+		if (!event.channel().isOpen()) {
+			return CLOSED;
 		}
 		
 		//event.push(true);
