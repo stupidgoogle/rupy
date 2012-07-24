@@ -220,5 +220,7 @@ VERSION:
       0.4.4
       
       - Fixed deadlock due to all events timing out at the same time.
+      - Content-Length changed from int to long, so chrome can upload 
+        files larger than 4GB.
         
 have fun!

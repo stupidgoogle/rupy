@@ -16,8 +16,8 @@ public class Query extends Hash {
 	private String path, version, parameters;
 	private HashMap headers;
 	private Input input;
-	private int length, method;
-	private long modified;
+	private int method;
+	private long length, modified;
 	private boolean done, parsed;
 
 	protected Query(Event event) throws IOException {
@@ -97,7 +97,7 @@ public class Query extends Hash {
 			String content = header("content-length");
 
 			if(content != null) {
-				length = Integer.parseInt(content);
+				length = Long.parseLong(content);
 			}
 			else {
 				length = 0;
@@ -216,7 +216,7 @@ public class Query extends Hash {
 		return modified;
 	}
 
-	public int length() {
+	public long length() {
 		return length;
 	}
 
