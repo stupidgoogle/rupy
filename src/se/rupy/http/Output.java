@@ -151,11 +151,11 @@ public abstract class Output extends OutputStream implements Event.Block {
 		}
 
 		if (fixed && reply.event().daemon().properties.getProperty("live") != null) {
-			wrote(("Cache-Control: max-age=3600, must-revalidate" + EOL)
+			wrote(("Cache-Control: max-age=86400" + EOL)
 					.getBytes());
-			wrote(("Expires: "
-					+ reply.event().worker().date().format(new Date(System.currentTimeMillis() + ((long) 1000 * 60 * 60 * 24 * 365))) + EOL)
-					.getBytes());
+			//wrote(("Expires: "
+			//		+ reply.event().worker().date().format(new Date(System.currentTimeMillis() + ((long) 1000 * 60 * 60 * 24 * 365))) + EOL)
+			//		.getBytes());
 		}
 
 		if (reply.event().session() != null && !reply.event().session().set()) {
