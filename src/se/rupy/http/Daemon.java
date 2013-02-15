@@ -668,7 +668,7 @@ public class Daemon implements Runnable {
 				if (app != null) {
 					for (int i = 0; i < app.length; i++) {
 						try {
-							Deploy.deploy(this, app[i]);
+							Deploy.deploy(this, app[i], null);
 						}
 						catch(Error e) {
 							e.printStackTrace();

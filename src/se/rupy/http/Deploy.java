@@ -99,7 +99,7 @@ public class Deploy extends Service {
 		out.close();
 
 		try {
-			event.reply().output().print("Application '" + deploy(event.daemon(), file) + "' deployed.");
+			event.reply().output().print("Application '" + deploy(event.daemon(), file, event) + "' deployed.");
 		}
 		catch(Error e) {
 			StringWriter trace = new StringWriter();
@@ -111,8 +111,8 @@ public class Deploy extends Service {
 		}
 	}
 
-	public static String deploy(Daemon daemon, File file) throws Exception {
-		Archive archive = new Archive(daemon, file);
+	public static String deploy(Daemon daemon, File file, Event event) throws Exception {
+		Archive archive = new Archive(daemon, file, event);
 
 		daemon.chain(archive);
 		daemon.verify(archive);
@@ -145,7 +145,7 @@ public class Deploy extends Service {
 					new ProtectionDomain(null, permissions)});
 		}
 
-		Archive(Daemon daemon, File file) throws Exception {
+		Archive(Daemon daemon, File file, Event event) throws Exception {
 			service = new HashSet();
 			chain = new HashMap();
 			name = file.getName();
@@ -178,9 +178,10 @@ public class Deploy extends Service {
 			else {
 				host = "content";
 			}
-
+			
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			JarEntry entry = null;
+			int i = 0;
 
 			while ((entry = in.getNextJarEntry()) != null) {
 				if (entry.getName().endsWith(".class")) {
@@ -191,10 +192,22 @@ public class Deploy extends Service {
 					String name = name(entry.getName());
 					classes.add(new Small(name, data));
 				} else if (!entry.isDirectory()) {
-					Big.write(host, "/" + entry.getName(), in);
+					Big.write(host, "/" + entry.getName(), entry, in);
+				}
+				
+				if(event != null) {
+					if(i > 60) {
+						event.output().println("");
+						i = 0;
+					}
+					
+					event.output().print(".");
+					event.output().flush();
+					
+					i++;
 				}
 			}
-
+			
 			int length = classes.size();
 			String missing = "";
 			Small small = null;
@@ -203,6 +216,11 @@ public class Deploy extends Service {
 				small = (Small) classes.elementAt(0);
 				classes.removeElement(small);
 				instantiate(small, daemon);
+			}
+			
+			if(event != null) {
+				event.output().println("");
+				event.output().flush();
 			}
 		}
 
@@ -306,14 +324,14 @@ public class Deploy extends Service {
 		private File file;
 		private String name;
 		private long date;
-
-		public Big(String host, String name, InputStream in, long date) throws IOException {
+/*
+		private Big(String host, String name, InputStream in, long date) throws IOException {
 			file = write(host, name, in);
 
 			this.name = name;
 			this.date = date - date % 1000;
 		}
-
+*/
 		public Big(File file) {
 			long date = file.lastModified();
 			this.name = file.getName();
@@ -321,13 +339,26 @@ public class Deploy extends Service {
 			this.date = date - date % 1000;
 		}
 
-		static File write(String host, String name, InputStream in) throws IOException {
+		static File write(String host, String name, JarEntry entry, InputStream in) throws IOException {
 			String path = name.substring(0, name.lastIndexOf("/"));
 			String root = Deploy.path + host;
 
 			new File(root + path).mkdirs();
 
 			File file = new File(root + name);
+			/*
+			if(file.exists()) {
+				long past = file.lastModified();
+				long future = entry.getTime();
+				
+				System.out.println(new Date(past));
+				System.out.println(new Date(future));
+				
+				if(past >= future) {
+					return file;
+				}
+			}
+			*/
 			file.createNewFile();
 
 			OutputStream out = new FileOutputStream(file);
@@ -467,6 +498,12 @@ public class Deploy extends Service {
 
 			return new String(out.toByteArray());
 		}
+		
+		static void toStream(InputStream in, OutputStream out) throws IOException {
+			pipe(in, out);
+
+			in.close();
+		}
 	}
 
 	public static String name(String name) {
@@ -519,7 +556,9 @@ public class Deploy extends Service {
 				URL url = new URL("http://" + args[0] + "/deploy");
 				File file = new File(args[1]);
 				InputStream in = new Client().send(url, file, args[2]);
-				System.out.println(new SimpleDateFormat("H:mm").format(new Date()) + " " + Client.toString(in));
+				System.out.println(new SimpleDateFormat("H:mm").format(new Date()));
+				Client.toStream(in, System.out);
+				System.out.println("");
 			} catch (ConnectException ce) {
 				System.out
 				.println("Connection failed, is there a server running on "
