@@ -322,6 +322,7 @@ public class Deploy extends Service {
 
 	static class Big implements Stream {
 		private File file;
+		private FileInputStream in;
 		private String name;
 		private long date;
 /*
@@ -377,12 +378,19 @@ public class Deploy extends Service {
 
 		public InputStream input() {
 			try {
-				return new FileInputStream(file);
+				in = new FileInputStream(file);
+				return in;
 			} catch (FileNotFoundException e) {
 				return null;
 			}
 		}
-
+		
+		public void close() {
+			try {
+				in.close();
+			} catch (IOException e) {}
+		}
+		
 		public long length() {
 			return file.length();
 		}
@@ -395,6 +403,7 @@ public class Deploy extends Service {
 	static class Small implements Stream {
 		private String name;
 		private byte[] data;
+		private ByteArrayInputStream in;
 		private long date;
 		private Class clazz;
 
@@ -413,9 +422,16 @@ public class Deploy extends Service {
 		}
 
 		public InputStream input() {
-			return new ByteArrayInputStream(data);
+			in = new ByteArrayInputStream(data);
+			return in;
 		}
 
+		public void close() {
+			try {
+				in.close();
+			} catch (IOException e) {}
+		}
+		
 		public long length() {
 			return data.length;
 		}
@@ -436,6 +452,7 @@ public class Deploy extends Service {
 	static interface Stream {
 		public String name();
 		public InputStream input();
+		public void close();
 		public long length();
 		public long date();
 	}
