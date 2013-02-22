@@ -261,8 +261,12 @@ public class Event extends Throwable implements Chain.Link {
 		reply.modified(stream.date());
 
 		if (query.modified() == 0 || query.modified() < reply.modified()) {
-			Deploy.pipe(stream.input(), reply.output(stream.length()));
-			stream.close();
+			try {
+				Deploy.pipe(stream.input(), reply.output(stream.length()));
+			}
+			finally {
+				stream.close();
+			}
 			
 			if (Event.LOG) {
 				log("content " + type, VERBOSE);
