@@ -204,7 +204,7 @@ VERSION:
       - Fixed boolean parameter.
       - Fixed SimpleDateFormat concurrency.
       - Added response code 505 for HTTP/1.0.
-      - Fixed file descriptor leak. Added -panel startup property 
+      - Fixed socket file descriptor leak. Added -panel startup property 
         so you can browse to /panel to get worker and event status 
         to debug locks and leaks.
       
@@ -222,5 +222,7 @@ VERSION:
       - Fixed deadlock due to all events timing out at the same time.
       - Content-Length changed from int to long, so chrome can upload 
         files larger than 4GB.
+      - Patched security flaw in hosted mode.
+      - Fixed "file" file descriptor leak.
         
 have fun!
