@@ -945,7 +945,7 @@ public class Daemon implements Runnable {
 					value = null;
 				}
 			}
-
+			//System.out.println(flag + " " + value);
 			if (value == null) {
 				properties.put(flag.substring(1).toLowerCase(), "true");
 			} else {

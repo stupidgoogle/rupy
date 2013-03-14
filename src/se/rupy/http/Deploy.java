@@ -497,7 +497,7 @@ public class Deploy extends Service {
 			if (code == 200) {
 				in = conn.getInputStream();
 			} else if (code < 0) {
-				throw new IOException("HTTP response unreadable.");
+				throw new IOException("HTTP response unreadable. (" + url + ", " + file + ", " + pass + ")");
 			} else {
 				in = conn.getErrorStream();
 			}

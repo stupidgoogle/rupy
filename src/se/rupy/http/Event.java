@@ -376,7 +376,9 @@ public class Event extends Throwable implements Chain.Link {
 			key.selector().wakeup();
 		}
 
-		throw new Exception("IO timeout. (" + daemon.delay + ")");
+		String agent = query.header("user-agent");
+		
+		throw new Exception("IO timeout. (" + daemon.delay + (agent == null ? "" : ", " + agent) + ")");
 	}
 
 	interface Block {
