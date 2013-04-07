@@ -171,6 +171,7 @@ public class Deploy extends Service {
 				permissions.add(new FilePermission(path + "-", "delete"));
 				permissions.add(new FilePermission("res" + File.separator + "-", "read"));
 				permissions.add(new PropertyPermission("user.dir", "read"));
+				permissions.add(new RuntimePermission("setContextClassLoader"));
 				access = new AccessControlContext(new ProtectionDomain[] {
 						new ProtectionDomain(null, permissions)});
 				new File(path).mkdirs();
