@@ -10,8 +10,8 @@ import java.io.IOException;
  * 
  * @author marc
  */
-class Failure extends IOException {
-	protected Failure(String message) {
+public class Failure extends IOException {
+	public Failure(String message) {
 		super(message);
 	}
 

@@ -1,6 +1,7 @@
 package se.rupy.http;
 
 import java.io.*;
+import java.lang.management.ManagementFactory;
 import java.net.*;
 import java.security.AccessControlContext;
 import java.security.AccessController;
@@ -536,6 +537,10 @@ public class Daemon implements Runnable {
 	}
 
 	protected Deploy.Stream content(String host, String path) {
+		if(!this.host) {
+			host = "content";
+		}
+		
 		File file = new File("app" + File.separator + host + File.separator + path);
 
 		if(file.exists() && !file.isDirectory()) {
@@ -575,6 +580,10 @@ public class Daemon implements Runnable {
 			}
 		}
 
+		if(!this.host) {
+			host = "content";
+		}
+		
 		synchronized (this.archive) {
 			if(this.host) {
 				Deploy.Archive archive = (Deploy.Archive) this.archive.get(host + ".jar");
@@ -960,5 +969,18 @@ public class Daemon implements Runnable {
 		}
 
 		new Daemon(properties).start();
+		
+		/*
+		 * If this is run as an application we log PID to pid.txt file in root.
+		 */
+		
+		try {
+			String pid = ManagementFactory.getRuntimeMXBean().getName();
+			PrintWriter out = new PrintWriter("pid.txt");
+			out.println(pid.substring(0, pid.indexOf('@')));
+			out.flush();
+			out.close();
+		}
+		catch(Exception e) {}
 	}
 }

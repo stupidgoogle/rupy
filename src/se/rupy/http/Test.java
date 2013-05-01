@@ -270,7 +270,7 @@ class Test implements Runnable {
 					failed = false;
 				}
 				else {
-					System.out.println("Socket closed. (" + path + ")");
+					System.out.println("Socket closed session. (" + path + ")");
 				}
 			}
 		}

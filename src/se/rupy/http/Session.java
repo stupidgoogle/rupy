@@ -86,7 +86,7 @@ public class Session extends Hash {
 		this.set = set;
 	}
 
-	protected long expires() {
+	public long expires() {
 		return expires;
 	}
 
