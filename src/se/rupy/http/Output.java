@@ -212,9 +212,11 @@ public abstract class Output extends OutputStream implements Event.Block {
 	}
 
 	protected void wrote(byte[] b, int off, int len) throws IOException {
+		int remaining = 0;
+		
 		try {
 			ByteBuffer out = reply.event().worker().out();
-			int remaining = out.remaining();
+			remaining = out.remaining();
 	
 			while (len > remaining) {
 				out.put(b, off, remaining);
@@ -235,7 +237,7 @@ public abstract class Output extends OutputStream implements Event.Block {
 		} catch (IOException e) {
 			Failure.chain(e);
 		} catch (Exception e) {
-			throw (IOException) new IOException().initCause(e);
+			throw (IOException) new IOException("Remaining (" + length + ", " + remaining + ", " + off + ", " + len + ")").initCause(e);
 		}
 	}
 

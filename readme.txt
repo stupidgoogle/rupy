@@ -224,5 +224,9 @@ VERSION:
         files larger than 4GB.
       - Patched security flaw in hosted mode.
       - Fixed "file" file descriptor leak.
+      
+      0.4.5
+      
+      - Adds pid.txt if run as app.
         
 have fun!
