@@ -23,20 +23,21 @@ import java.nio.channels.*;
  */
 
 public class Daemon implements Runnable {
-	protected Properties properties;
-	protected boolean verbose, debug, host, alive, panel;
-	protected int threads, timeout, cookie, delay, size, port;
 	private int selected, valid, accept, readwrite; // panel stats
 	private HashMap archive, service;
-	protected ConcurrentHashMap events, session;
-	protected Chain workers, queue;
 	private Heart heart;
 	private Selector selector;
 	private String pass;
-	protected PrintStream out, access, error;
 	private static DateFormat DATE;
-	protected AccessControlContext control;
-
+	
+	Chain workers, queue;
+	Properties properties;
+	PrintStream out, access, error;
+	AccessControlContext control;
+	ConcurrentHashMap events, session;
+	int threads, timeout, cookie, delay, size, port;
+	boolean verbose, debug, host, alive, panel;
+	
 	/**
 	 * Don't forget to call {@link #start()}.
 	 */

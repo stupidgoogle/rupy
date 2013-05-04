@@ -34,10 +34,11 @@ import java.nio.channels.*;
  */
 public class Event extends Throwable implements Chain.Link {
 	// waste of time it seems. hotspot does this optimisation for me! :)
-	public final static boolean LOG = true;
+	protected final static boolean LOG = true;
 
 	static int READ = 1 << 0;
 	static int WRITE = 1 << 2;
+	
 	static int VERBOSE = 1 << 0;
 	static int DEBUG = 1 << 1;
 

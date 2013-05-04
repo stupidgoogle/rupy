@@ -41,11 +41,12 @@ public class Reply {
 	
 	private String type = "text/html; charset=UTF-8";
 	private HashMap headers;
-	protected Output output;
 	private Event event;
 	private long modified;
 	private String code;
 
+	Output output;
+	
 	protected Reply(Event event) throws IOException {
 		this.event = event;
 		output = new Output.Chunked(this);
