@@ -471,6 +471,7 @@ public class Event extends Throwable implements Chain.Link {
 				do {
 					key = random(daemon.cookie);
 				} while (daemon.session().get(key) != null);
+				
 				session.key(key);
 			}
 
