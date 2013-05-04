@@ -163,42 +163,42 @@ public class Event extends Throwable implements Chain.Link {
 	}
 
 	/**
-	 * @return same as {@link Query#big(String)}.
+	 * @return same as {@link Query}.
 	 */
 	public long big(String key) {
 		return query.big(key);
 	}
 
 	/**
-	 * @return same as {@link Query#medium(String)}.
+	 * @return same as {@link Query}.
 	 */
 	public int medium(String key) {
 		return query.medium(key);
 	}
 
 	/**
-	 * @return same as {@link Query#small(String)}.
+	 * @return same as {@link Query}.
 	 */
 	public short small(String key) {
 		return query.small(key);
 	}
 
 	/**
-	 * @return same as {@link Query#tiny(String)}.
+	 * @return same as {@link Query}.
 	 */
 	public byte tiny(String key) {
 		return query.tiny(key);
 	}
 
 	/**
-	 * @return same as {@link Query#bit(String, boolean)}.
+	 * @return same as {@link Query}.
 	 */
 	public boolean bit(String key) {
 		return query.bit(key, true);
 	}
 
 	/**
-	 * @return same as {@link Query#string(String)}.
+	 * @return same as {@link Query}.
 	 */
 	public String string(String key) {
 		return query.string(key);

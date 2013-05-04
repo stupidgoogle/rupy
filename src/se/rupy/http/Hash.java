@@ -112,8 +112,8 @@ public class Hash extends HashMap {
 	 * Returns the boolean value, with a twist though 
 	 * since a parameter is true if its key is present.
 	 * @param key
-	 * @param exist
-	 * @return if the parameter is true or exists
+	 * @param return true if parameter exists?
+	 * @return if the parameter is true or exists if exists = true.
 	 */
 	public boolean bit(String key, boolean exist) {
 		Object value = super.get(key);
