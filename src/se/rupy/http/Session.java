@@ -71,7 +71,7 @@ public class Session extends Hash {
 	 * 
 	 * @return has the cookie BEEN set.
 	 */
-	public boolean set() {
+	protected boolean set() {
 		return set;
 	}
 
@@ -82,7 +82,7 @@ public class Session extends Hash {
 	 * 
 	 * @param set
 	 */
-	public void set(boolean set) {
+	protected void set(boolean set) {
 		this.set = set;
 	}
 
