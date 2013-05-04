@@ -110,7 +110,7 @@ public class Hash extends HashMap {
 	
 	/**
 	 * Returns the boolean value, with a twist though 
-	 * since a parameter is true if its key is present.
+	 * since a parameter is true if it's key is present.
 	 * @param key
 	 * @param return true if parameter exists?
 	 * @return if the parameter is true or exists if exists = true.
