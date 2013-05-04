@@ -26,7 +26,7 @@ public class Session extends Hash {
 		touch();
 	}
 
-	protected synchronized void add(Service service) {
+	protected void add(Service service) {
 		if (!this.service.contains(service)) {
 			this.service.add(service);
 		}
@@ -92,6 +92,7 @@ public class Session extends Hash {
 
 	protected void expires(long expires) {
 		this.expires = expires;
+		set = false;
 	}
 
 	public String key() {
