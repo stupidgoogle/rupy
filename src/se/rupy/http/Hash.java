@@ -7,7 +7,7 @@ import java.util.HashMap;
  * 
  * @author marc
  */
-class Hash extends HashMap {
+public class Hash extends HashMap {
 	public long big(String key) {
 		return big(key, 0);
 	}
