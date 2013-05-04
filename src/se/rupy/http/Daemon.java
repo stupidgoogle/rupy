@@ -35,7 +35,7 @@ public class Daemon implements Runnable {
 	private String pass;
 	protected PrintStream out, access, error;
 	private static DateFormat DATE;
-	public AccessControlContext control;
+	protected AccessControlContext control;
 
 	/**
 	 * Don't forget to call {@link #start()}.
@@ -339,11 +339,6 @@ public class Daemon implements Runnable {
 		}
 	}
 
-	/*
-	 * Listener - Cross class-loader communication interface. So that a class 
-	 * deployed in one archive can send messages to a class deployed in another.
-	 */
-
 	private Listener listener;
 
 	/**
@@ -372,22 +367,19 @@ public class Daemon implements Runnable {
 	}
 
 	/**
-	 * The listener filters Object messages, for example JSONObject.
+	 * Cross class-loader communication interface. So that a class deployed 
+	 * in one archive can send messages to a class deployed in another.
 	 * @author Marc
 	 */
 	public interface Listener {
 		/**
 		 * Forward, alter or swallow message.
 		 * @param message
-		 * @return The forwarded, altered message or null to swallow.
+		 * @return The forwarded, altered or null if swallowed message.
 		 * @throws Exception
 		 */
 		public Object receive(Object message) throws Exception;
 	}
-
-	/*
-	 * Listener
-	 */
 
 	public void add(Service service) throws Exception {
 		add(this.service, service, null);

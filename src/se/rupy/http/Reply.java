@@ -184,7 +184,7 @@ public class Reply {
 	 * Just make sure you didn't already flush the reply and that you are ready to
 	 * catch the event when it recycles!
 	 * 
-	 * @return The status of the wakeup call. {@link Reply#OK}, {@link Reply#COMPLETE} or {@link Reply#PROCESSING}
+	 * @return The status of the wakeup call. {@link Reply#OK}, {@link Reply#COMPLETE}, {@link Reply#CLOSED} or {@link Reply#WORKING}
 	 */
 	public int wakeup() {
 		if (event.worker() != null) {
