@@ -50,20 +50,18 @@ public class Daemon implements Runnable {
 	 * should be in the properties argument.
 	 * 
 	 * @param <br><b>host</b> (false)<br><br>
-	 *            if you want to enable virtual hosting, you need to<br>
-	 *            name the deployment jar [host].jar, for example:<br>
-	 *            <i>host.rupy.se.jar</i>. Also if you want to trigger<br>
-	 *            on root domain, just deploy www.[host] so for example<br>
-	 *            <i>www.rupy.se.jar</i> will trigger <i>http://rupy.se</i> too!</i><br><br>
-	 *            To authenticate deployments you should use a properties<br>
-	 *            file called <i>passport</i> in the rupy root where you<br>
-	 *            store [host]=[pass].<br><br>
-	 * @param <b>domain</b> ("host.rupy.se") requires <b>host</b><br><br>
-	 *            if your host is a <a href="http://en.wikipedia.org/wiki/Platform_as_a_service">PaaS</a> on <i>one machine</i>; add the<br>
-	 *            passport file to your control domain app folder instead (for<br>
-	 *            example app/host.rupy.se/passport) and create a symbolic<br>
-	 *            link to that in the rupy root and hide it from downloading<br>
-	 *            with the following code:<br><br>
+	 *            if you want to enable virtual hosting, you need to name<br>
+	 *            the deployment jar [host].jar, for example: <i>host.rupy.se.jar</i>.<br>
+	 *            Also if you want to trigger on root domain, just deploy<br>
+	 *            www.[host] so for example <i>www.rupy.se.jar</i> will trigger<br>
+	 *            <i>http://rupy.se</i> too!</i><br><br>
+	 *            To authenticate deployments you should use a properties file<br>
+	 *            called <i>passport</i> in the rupy root where you store [host]=[pass].<br><br>
+	 * @param <b>domain</b> (host.rupy.se) requires <b>host</b><br><br>
+	 *            if your host is a <a href="http://en.wikipedia.org/wiki/Platform_as_a_service">PaaS</a> on <i>one machine</i>; add the passport<br>
+	 *            file to your control domain app folder instead (for example<br>
+	 *            app/host.rupy.se/passport; hide it from downloading with the<br>
+	 *            code below) and create a symbolic link to that in the rupy root.<br><br>
 	 *            <tt>
 &nbsp;&nbsp;&nbsp;&nbsp;public static class Secure extends Service {<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;public String path() { return "/passport"; }<br>
@@ -71,11 +69,11 @@ public class Daemon implements Runnable {
 &nbsp;&nbsp;&nbsp;&nbsp;}<br>
 <br>
    </tt>
-	 *            if you are hosting a <a href="http://en.wikipedia.org/wiki/Platform_as_a_service">PaaS</a> <i>across a cluster</i>, you have to<br>
-	 *            hook your control domain app up with {@link Daemon#set(Listener listener)}. And reply<br>
+	 *            if you are hosting a <a href="http://en.wikipedia.org/wiki/Platform_as_a_service">PaaS</a> <i>across a cluster</i>, you have to hook<br>
+	 *            your control domain app up with {@link Daemon#set(Listener listener)}. And reply<br>
 	 *            OK if the {"file": "[host].jar", "pass": "[pass]"} sent by<br>
 	 *            {@link Deploy} is authenticated.<br><br>
-	 * @param <b>pass</b> ("")<br><br>
+	 * @param <b>pass</b> ()<br><br>
 	 *            the pass used to deploy services via HTTP POST, not adding<br>
 	 *            this disables remote hot-deploy.<br><br>
 	 * @param <b>port</b> (8000)<br><br>
@@ -102,8 +100,8 @@ public class Daemon implements Runnable {
 	 * @param <b>cache</b> (86400) requires <b>live</b><br><br>
 	 *            seconds to hard cache static files.<br><br>
 	 * @param <b>verbose</b> (false)<br><br>
-	 *            to log information about these startup parameters,<br>
-	 *            high-level info for each request and deployed services overview.<br><br>
+	 *            to log information about these startup parameters, high-level<br>
+	 *            info for each request and deployed services overview.<br><br>
 	 * @param <b>debug</b> (false)<br><br>
 	 *            to log low-level NIO info for each request and class 
 	 *            loading info.<br><br>
