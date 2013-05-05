@@ -70,8 +70,8 @@ public class Daemon implements Runnable {
    </tt>
 	 *            if you are hosting a <a href="http://en.wikipedia.org/wiki/Platform_as_a_service">PaaS</a> <i>across a cluster</i>, you have to hook<br>
 	 *            your control domain app up with {@link Daemon#set(Listener listener)}. And reply<br>
-	 *            OK if the {"file": "[host].jar", "pass": "[pass]"} sent by<br>
-	 *            {@link Deploy} is authenticated.<br><br>
+	 *            "OK" if the {"file": "[host].jar", "pass": "[pass]"} sent by {@link Deploy}<br>
+	 *            authenticates.<br><br>
 	 * @param <b>pass</b> ()<br><br>
 	 *            the pass used to deploy services via HTTP POST, not adding<br>
 	 *            this disables remote hot-deploy.<br><br>
