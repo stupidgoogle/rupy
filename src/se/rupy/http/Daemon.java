@@ -27,17 +27,17 @@ public class Daemon implements Runnable {
 	private HashMap archive, service;
 	private Heart heart;
 	private Selector selector;
-	private String pass;
+	private String controller;
 	private static DateFormat DATE;
-	
+
 	Chain workers, queue;
 	Properties properties;
 	PrintStream out, access, error;
 	AccessControlContext control;
 	ConcurrentHashMap events, session;
-	int threads, timeout, cookie, delay, size, port;
+	int threads, timeout, cookie, delay, size, port, cache;
 	boolean verbose, debug, host, alive, panel;
-	
+
 	/**
 	 * Don't forget to call {@link #start()}.
 	 */
@@ -50,13 +50,34 @@ public class Daemon implements Runnable {
 	 * should be in the properties argument.
 	 * 
 	 * @param <br><b>host</b> (false)
-	 *            <i>if you want to enable virtual hosting, you should then name the 
-	 *            deployment jar to the hostname: for example: host.rupy.se.jar. Also 
-	 *            if you want to trigger on root domain just deploy www.[domain] so for 
-	 *            example www.rupy.se.jar will return for host: rupy.se too!</i><br><br>
+	 *            <i>if you want to enable virtual hosting, you need to 
+	 *            name the deployment jar [host].jar, for example: 
+	 *            <i>host.rupy.se.jar</i>. Also if you want to trigger 
+	 *            on root domain, just deploy www.[host] so for example 
+	 *            <i>www.rupy.se.jar</i> will trigger <i>http://rupy.se</i> too!</i><br><br>
+	 *            To authenticate deployments you should use a file 
+	 *            called <i>passport</i> in the root where you store 
+	 *            [host]=[pass].<br><br>
+	 * @param <b>controller</b> ("") requires <b>host</b>
+	 *            If your host is a <a href="http://en.wikipedia.org/wiki/Platform_as_a_service">PaaS</a> on <i>one machine</i>; symbolic 
+	 *            link the passport file in your controller app (for 
+	 *            example app/host.rupy.se/passport) that you add new 
+	 *            hosts to dynamically and hide it from downloading 
+	 *            with the following code:<br><br>
+	 *            <tt>
+&nbsp;&nbsp;&nbsp;&nbsp;public static class Secure extends Service {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;public String path() { return "/passport"; }<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;public void filter(Event event) throws Event, Exception { event.output().print("Nice try!"); }<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+<br>
+   </tt>
+	 *            If you are hosting a <a href="http://en.wikipedia.org/wiki/Platform_as_a_service">PaaS</a> <i>across a cluster</i>, you have to 
+	 *            alter the source to allow cross-classloader communication 
+	 *            to your controller app <b>only</b>, search for host.rupy.se 
+	 *            in the source.<br><br>
 	 * @param <b>pass ("")</b>
-	 *            <i>the pass used to deploy services via HTTP POST not adding this disables 
-	 *            remote hot-deploy.</i><br><br>
+	 *            <i>the pass used to deploy services via HTTP POST, not adding 
+	 *            this disables remote hot-deploy.</i><br><br>
 	 * @param <b>port</b> (8000)
 	 *            <i>which TCP port</i><br><br>
 	 * @param <b>threads</b> (5)
@@ -70,15 +91,17 @@ public class Daemon implements Runnable {
 	 * @param <b>delay</b> (5000 ms.)
 	 *            <i>time in milliseconds before started event gets dropped due to
 	 *            inactivity.<br><br>
-	 *            This is also the dead socket worker cleanup variable, so if a worker 
-	 *            has a socket that hasn't been active for longer than this the worker 
-	 *            will be released and the socket deemed as dead.</i><br><br>
+	 *            This is also the dead socket worker cleanup variable, so if 
+	 *            a worker has a socket that hasn't been active for longer than 
+	 *            this the worker will be released and the socket deemed as dead.</i><br><br>
 	 * @param <b>size</b> (1024 bytes)
 	 *            <i>IO buffer size, should be proportional to the data sizes
 	 *            received/sent by the server currently this is input/output-
 	 *            buffer, chunk-buffer, post-body-max and header-max lengths! :P</i><br><br>
 	 * @param <b>live</b> (false)
-	 *            <i>uses cache-control header to cache static files.</i><br><br>
+	 *            <i>is this rupy running live.</i><br><br>
+	 * @param <b>cache</b> (86400 s.) requires <b>live</b>
+	 *            <i>seconds to hard cache static files.</i><br><br>
 	 * @param <b>verbose</b> (false)
 	 *            <i>to log information about these startup parameters, 
 	 *            high-level info for each request and deployed services overview.</i><br><br>
@@ -97,17 +120,19 @@ public class Daemon implements Runnable {
 		timeout = Integer.parseInt(properties.getProperty("timeout", "300")) * 1000;
 		delay = Integer.parseInt(properties.getProperty("delay", "5000"));
 		size = Integer.parseInt(properties.getProperty("size", "1024"));
+		cache = Integer.parseInt(properties.getProperty("cache", "86400"));
 
 		verbose = properties.getProperty("verbose", "false").toLowerCase()
-		.equals("true");
+				.equals("true");
 		debug = properties.getProperty("debug", "false").toLowerCase().equals(
-		"true");
+				"true");
 		host = properties.getProperty("host", "false").toLowerCase().equals(
-		"true");
+				"true");
 		panel = properties.getProperty("panel", "false").toLowerCase().equals(
-		"true");
+				"true");
 
 		if(host) {
+			controller = properties.getProperty("controller", "host.rupy.se");
 			PermissionCollection permissions = new Permissions();
 			control = new AccessControlContext(new ProtectionDomain[] {
 					new ProtectionDomain(null, permissions)});
@@ -129,7 +154,7 @@ public class Daemon implements Runnable {
 			out = new PrintStream(System.out, true, "UTF-8");
 
 			if(properties.getProperty("log") != null || properties.getProperty("test", "false").toLowerCase().equals(
-			"true")) {
+					"true")) {
 				log();
 			}
 		} catch (Exception e) {
@@ -223,7 +248,6 @@ public class Daemon implements Runnable {
 		}
 	}
 
-
 	/**
 	 * Starts the selector, heartbeat and worker threads.
 	 */
@@ -232,7 +256,7 @@ public class Daemon implements Runnable {
 			heart = new Heart();
 
 			int threads = Integer.parseInt(properties.getProperty("threads",
-			"5"));
+					"5"));
 
 			for (int i = 0; i < threads; i++) {
 				workers.add(new Worker(this, i));
@@ -264,7 +288,7 @@ public class Daemon implements Runnable {
 		selector.wakeup();
 	}
 
-	public ConcurrentHashMap session() {
+	protected ConcurrentHashMap session() {
 		return session;
 	}
 
@@ -321,12 +345,12 @@ public class Daemon implements Runnable {
 		}
 
 		if(host) {
-			if(name.equals("host.rupy.se.jar")) {
+			if(name.equals(controller + ".jar")) {
 				return Deploy.Archive.deployer;
 			}
-			
+
 			Deploy.Archive archive = (Deploy.Archive) this.archive.get(name);
-			
+
 			if(archive == null) {
 				return (Deploy.Archive) this.archive.get("www." + name);
 			}
@@ -346,12 +370,12 @@ public class Daemon implements Runnable {
 	 * classes here otherwise hotdeploy will fail.
 	 * 
 	 * @param message
-	 * @return
+	 * @return null if no listener was added or reply message.
 	 * @throws Exception
 	 */
 	public Object send(Object message) throws Exception {
 		if(listener == null) {
-			return message;
+			return null;
 		}
 
 		return listener.receive(message);
@@ -363,7 +387,26 @@ public class Daemon implements Runnable {
 	 * @param listener
 	 */
 	public void set(Listener listener) {
-		this.listener = listener;
+		try {
+			/*
+			 * So only the controller can be added as listener since we use this feature to authenticate deployments.
+			 */
+			
+			if(host) {
+				File pass = new File("app/" + controller + "/passport");
+
+				if(!pass.exists()) {
+					pass.createNewFile();
+				}
+
+				pass.canRead();
+			}
+
+			this.listener = listener;
+		}
+		catch(IOException e) {
+			// if passport could not be created
+		}
 	}
 
 	/**
@@ -373,9 +416,8 @@ public class Daemon implements Runnable {
 	 */
 	public interface Listener {
 		/**
-		 * Forward, alter or swallow message.
 		 * @param message
-		 * @return The forwarded, altered or null if swallowed message.
+		 * @return the reply message to the sender.
 		 * @throws Exception
 		 */
 		public Object receive(Object message) throws Exception;
@@ -532,7 +574,7 @@ public class Daemon implements Runnable {
 		if(!this.host) {
 			host = "content";
 		}
-		
+
 		File file = new File("app" + File.separator + host + File.separator + path);
 
 		if(file.exists() && !file.isDirectory()) {
@@ -575,7 +617,7 @@ public class Daemon implements Runnable {
 		if(!this.host) {
 			host = "content";
 		}
-		
+
 		synchronized (this.archive) {
 			if(this.host) {
 				Deploy.Archive archive = (Deploy.Archive) this.archive.get(host + ".jar");
@@ -714,7 +756,7 @@ public class Daemon implements Runnable {
 			}
 
 			if (properties.getProperty("test", "false").toLowerCase().equals(
-			"true")) {
+					"true")) {
 				new Test(this, 1);
 			}
 		} catch (Exception e) {
@@ -729,15 +771,15 @@ public class Daemon implements Runnable {
 		while (alive) {
 			try {
 				selector.select();
-				
+
 				Set set = selector.selectedKeys();
 				int valid = 0, accept = 0, readwrite = 0, selected = set.size();
 				Iterator it = set.iterator();
-				
+
 				while (it.hasNext()) {
 					key = (SelectionKey) it.next();
 					it.remove();
-					
+
 					if (key.isValid()) {
 						valid++;
 						if (key.isAcceptable()) {
@@ -763,7 +805,7 @@ public class Daemon implements Runnable {
 										event.log("write ---");
 								}
 							}
-							
+
 							if (key.isReadable() && event.push()) {
 								event.disconnect(null);
 							} else if (worker == null) {
@@ -961,11 +1003,11 @@ public class Daemon implements Runnable {
 		}
 
 		new Daemon(properties).start();
-		
+
 		/*
 		 * If this is run as an application we log PID to pid.txt file in root.
 		 */
-		
+
 		try {
 			String pid = ManagementFactory.getRuntimeMXBean().getName();
 			PrintWriter out = new PrintWriter("pid.txt");

@@ -58,16 +58,25 @@ public class Deploy extends Service {
 		}
 
 		if (Deploy.pass == null) {
-			if(size != null && size.length() > 0 && Integer.parseInt(size) > 2097152) {
-				throw new Exception("Maximum deployable size is 2MB.");
+			if(size != null && size.length() > 0 && Integer.parseInt(size) > 1048576) {
+				throw new Exception("Maximum deployable size is 1MB. To deploy resources use .zip extension, total limit is 10MB!");
 			}
 
-			Properties properties = new Properties();
-			properties.load(new FileInputStream(new File("passport")));
-			String port = properties.getProperty(name.substring(0, name.lastIndexOf('.')));
+			String auth = (String) event.daemon().send(pass);
 
-			if (port == null || !port.equals(pass)) {
-				throw new Exception("Pass verification failed. (" + name + ")");
+			if(auth == null) {
+				Properties properties = new Properties();
+				properties.load(new FileInputStream(new File("passport")));
+				String port = properties.getProperty(name.substring(0, name.lastIndexOf('.')));
+
+				if (port == null || !port.equals(pass)) {
+					throw new Exception("Pass verification failed. (" + name + ")");
+				}
+			}
+			else {
+				if(!auth.equals("OK")) {
+					throw new Exception("Pass verification failed. (" + name + ")");
+				}
 			}
 		}
 		else {
@@ -84,7 +93,7 @@ public class Deploy extends Service {
 
 		if (Deploy.pass == null) {
 			try {
-				pipe(in, out, 1024, 2097152); // 2MB limit
+				pipe(in, out, 1024, 1048576); // 1MB limit
 			}
 			catch(IOException e) {
 				file.delete();
@@ -180,7 +189,7 @@ public class Deploy extends Service {
 			else {
 				host = "content";
 			}
-			
+
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			JarEntry entry = null;
 			int i = 0;
@@ -196,20 +205,20 @@ public class Deploy extends Service {
 				} else if (!entry.isDirectory()) {
 					Big.write(host, "/" + entry.getName(), entry, in);
 				}
-				
+
 				if(event != null) {
 					if(i > 60) {
 						event.output().println("");
 						i = 0;
 					}
-					
+
 					event.output().print(".");
 					event.output().flush();
-					
+
 					i++;
 				}
 			}
-			
+
 			int length = classes.size();
 			String missing = "";
 			Small small = null;
@@ -219,7 +228,7 @@ public class Deploy extends Service {
 				classes.removeElement(small);
 				instantiate(small, daemon);
 			}
-			
+
 			if(event != null) {
 				event.output().println("");
 				event.output().flush();
@@ -327,14 +336,14 @@ public class Deploy extends Service {
 		private FileInputStream in;
 		private String name;
 		private long date;
-/*
+		/*
 		private Big(String host, String name, InputStream in, long date) throws IOException {
 			file = write(host, name, in);
 
 			this.name = name;
 			this.date = date - date % 1000;
 		}
-*/
+		 */
 		public Big(File file) {
 			long date = file.lastModified();
 			this.name = file.getName();
@@ -353,15 +362,15 @@ public class Deploy extends Service {
 			if(file.exists()) {
 				long past = file.lastModified();
 				long future = entry.getTime();
-				
+
 				System.out.println(new Date(past));
 				System.out.println(new Date(future));
-				
+
 				if(past >= future) {
 					return file;
 				}
 			}
-			*/
+			 */
 			file.createNewFile();
 
 			OutputStream out = new FileOutputStream(file);
@@ -386,13 +395,13 @@ public class Deploy extends Service {
 				return null;
 			}
 		}
-		
+
 		public void close() {
 			try {
 				in.close();
 			} catch (IOException e) {}
 		}
-		
+
 		public long length() {
 			return file.length();
 		}
@@ -433,7 +442,7 @@ public class Deploy extends Service {
 				in.close();
 			} catch (IOException e) {}
 		}
-		
+
 		public long length() {
 			return data.length;
 		}
@@ -517,7 +526,7 @@ public class Deploy extends Service {
 
 			return new String(out.toByteArray());
 		}
-		
+
 		static void toStream(InputStream in, OutputStream out) throws IOException {
 			pipe(in, out);
 
@@ -536,7 +545,7 @@ public class Deploy extends Service {
 	}
 
 	public static int pipe(InputStream in, OutputStream out, int length)
-	throws IOException {
+			throws IOException {
 		return pipe(in, out, length, 0);
 	}
 

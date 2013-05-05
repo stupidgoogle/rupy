@@ -151,7 +151,7 @@ public abstract class Output extends OutputStream implements Event.Block {
 		}
 
 		if (fixed && reply.event().daemon().properties.getProperty("live") != null) {
-			wrote(("Cache-Control: max-age=86400" + EOL)
+			wrote(("Cache-Control: max-age=" + reply.event().daemon().cache + EOL)
 					.getBytes());
 			//wrote(("Expires: "
 			//		+ reply.event().worker().date().format(new Date(System.currentTimeMillis() + ((long) 1000 * 60 * 60 * 24 * 365))) + EOL)
