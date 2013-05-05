@@ -17,7 +17,9 @@ import java.nio.channels.*;
 
 /**
  * A tiny HTTP daemon. The whole server is non-static so that you can launch
- * multiple contained HTTP servers in one application on different ports.
+ * multiple contained HTTP servers in one application on different ports.<br>
+ * <br>
+ * See the configurations: {@link #Daemon()}
  * 
  * @author marc
  */
@@ -47,16 +49,50 @@ public class Daemon implements Runnable {
 
 	/**
 	 * Don't forget to call {@link #start()}. The parameters below
-	 * should be in the properties argument.
-	 * 
-	 * @param <br><b>host</b> (false)<br><br>
+	 * should be in the properties argument. The parenthesis contains the default value.<br><br>
+	 * <table>
+	 * <tr><td valign="top"><b>pass</b> ()<br><br></td><td>
+	 *            the pass used to deploy services via HTTP POST, not adding<br>
+	 *            this disables remote hot-deploy.<br><br></td></tr>
+	 * <tr><td valign="top"><b>port</b> (8000)<br><br></td><td>
+	 *            which TCP port<br><br></td></tr>
+	 * <tr><td valign="top"><b>threads</b> (5)<br><br></td><td>
+	 *            how many worker threads, the daemon also starts one selector<br>
+	 *            and one heartbeat thread.<br><br></td></tr>
+	 * <tr><td valign="top"><b>timeout</b> (5 minutes)<br><br></td><td>
+	 *            session timeout in seconds or 0 to disable sessions<br><br></td></tr>
+	 * <tr><td valign="top"><b>cookie</b> (4)<br><br></td><td>
+	 *            session key character length; default and minimum is 4, > 10 can<br>
+	 *            be considered secure<br><br></td></tr>
+	 * <tr><td valign="top"><b>delay</b> (5000)<br><br></td><td>
+	 *            milliseconds before started event gets dropped due to inactivity.<br><br>
+	 *            This is also the dead socket worker cleanup variable, so if <br>
+	 *            a worker has a socket that hasn't been active for longer than <br>
+	 *            this the worker will be released and the socket deemed as dead.<br><br></td></tr>
+	 * <tr><td valign="top"><b>size</b> (1024 bytes)<br><br></td><td>
+	 *            IO buffer size, should be proportional to the data sizes<br>
+	 *            received/sent by the server currently this is input/output-<br>
+	 *            buffer, chunk-buffer, post-body-max and header-max lengths! :P<br><br></td></tr>
+	 * <tr><td valign="top"><b>live</b> (false)<br><br></td><td>
+	 *            is this rupy running live.<br><br></td></tr>
+	 * <tr><td valign="top"><b>cache</b> (86400)<br><i>requires</i> <b>live</b><br><br></td><td valign="top">
+	 *            seconds to hard cache static files.<br><br></td></tr>
+	 * <tr><td valign="top"><b>verbose</b> (false)<br><br></td><td>
+	 *            to log information about these startup parameters, high-level<br>
+	 *            info for each request and deployed services overview.<br><br></td></tr>
+	 * <tr><td valign="top"><b>debug</b> (false)<br><br></td><td>
+	 *            to log low-level NIO info for each request and class 
+	 *            loading info.<br><br></td></tr>
+	 * <tr><td valign="top"><b>log</b> (false)<br><br></td><td>
+	 *            simple log of access and error in /log.<br><br></td></tr>
+	 * <tr><td valign="top"><b>host</b> (false)<br><br></td><td>
 	 *            to enable virtual hosting, you need to name the deployment<br>
 	 *            jars [host].jar, for example: <i>host.rupy.se.jar</i>.<br><br>
 	 *            Also if you want to deploy root domain, just deploy www.[host];<br>
 	 *            so for example <i>www.rupy.se.jar</i> will trigger <i>http://rupy.se</i>.<br><br>
 	 *            To authenticate deployments you should use a properties file<br>
-	 *            called <i>passport</i> in the rupy root where you store [host]=[pass].<br><br>
-	 * @param <b>domain</b> (host.rupy.se) requires <b>host</b><br><br>
+	 *            called <i>passport</i> in the rupy root where you store [host]=[pass].<br><br></td></tr>
+	 * <tr><td valign="top"><b>domain</b> (host.rupy.se)<br><i>requires</i> <b>host</b><br><br></td><td>
 	 *            if your host is a <a href="http://en.wikipedia.org/wiki/Platform_as_a_service">PaaS</a> on <i>one machine</i>; add the passport<br>
 	 *            file to your control domain app folder instead (for example<br>
 	 *            app/host.rupy.se/passport; hide it from downloading with the<br>
@@ -72,41 +108,8 @@ public class Daemon implements Runnable {
 	 *            if you are hosting a <a href="http://en.wikipedia.org/wiki/Platform_as_a_service">PaaS</a> <i>across a cluster</i>, you have to hook<br>
 	 *            your control domain app up with {@link Daemon#set(Listener listener)}. And reply<br>
 	 *            "OK" if the {"file": "[host].jar", "pass": "[pass]"} sent by {@link Deploy}<br>
-	 *            authenticates.<br><br>
-	 * @param <b>pass</b> ()<br><br>
-	 *            the pass used to deploy services via HTTP POST, not adding<br>
-	 *            this disables remote hot-deploy.<br><br>
-	 * @param <b>port</b> (8000)<br><br>
-	 *            which TCP port<br><br>
-	 * @param <b>threads</b> (5)<br><br>
-	 *            how many worker threads, the daemon also starts one selector<br>
-	 *            and one heartbeat thread.<br><br>
-	 * @param <b>timeout</b> (5 minutes)<br><br>
-	 *            session timeout in seconds or 0 to disable sessions<br><br>
-	 * @param <b>cookie</b> (4)<br><br>
-	 *            session key character length; default and minimum is 4, > 10 can<br>
-	 *            be considered secure<br><br>
-	 * @param <b>delay</b> (5000)<br><br>
-	 *            milliseconds before started event gets dropped due to inactivity.<br><br>
-	 *            This is also the dead socket worker cleanup variable, so if <br>
-	 *            a worker has a socket that hasn't been active for longer than <br>
-	 *            this the worker will be released and the socket deemed as dead.<br><br>
-	 * @param <b>size</b> (1024 bytes)<br><br>
-	 *            IO buffer size, should be proportional to the data sizes<br>
-	 *            received/sent by the server currently this is input/output-<br>
-	 *            buffer, chunk-buffer, post-body-max and header-max lengths! :P<br><br>
-	 * @param <b>live</b> (false)<br><br>
-	 *            is this rupy running live.<br><br>
-	 * @param <b>cache</b> (86400) requires <b>live</b><br><br>
-	 *            seconds to hard cache static files.<br><br>
-	 * @param <b>verbose</b> (false)<br><br>
-	 *            to log information about these startup parameters, high-level<br>
-	 *            info for each request and deployed services overview.<br><br>
-	 * @param <b>debug</b> (false)<br><br>
-	 *            to log low-level NIO info for each request and class 
-	 *            loading info.<br><br>
-	 * @param <b>log</b> (false)<br><br>
-	 *            simple log of access and error in /log.<br><br>
+	 *            authenticates.<br><br></td></tr>
+	 * </table>
 	 */
 	public Daemon(Properties properties) {
 		this.properties = properties;
