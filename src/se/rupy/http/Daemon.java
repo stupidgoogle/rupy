@@ -50,11 +50,10 @@ public class Daemon implements Runnable {
 	 * should be in the properties argument.
 	 * 
 	 * @param <br><b>host</b> (false)<br><br>
-	 *            if you want to enable virtual hosting, you need to name<br>
-	 *            the deployment jar [host].jar, for example: <i>host.rupy.se.jar</i>.<br>
-	 *            Also if you want to trigger on root domain, just deploy<br>
-	 *            www.[host] so for example <i>www.rupy.se.jar</i> will trigger<br>
-	 *            <i>http://rupy.se</i> too!</i><br><br>
+	 *            to enable virtual hosting, you need to name the deployment<br>
+	 *            jars [host].jar, for example: <i>host.rupy.se.jar</i>.<br><br>
+	 *            Also if you want to deploy root domain, just deploy www.[host];<br>
+	 *            so for example <i>www.rupy.se.jar</i> will trigger <i>http://rupy.se</i>.<br><br>
 	 *            To authenticate deployments you should use a properties file<br>
 	 *            called <i>passport</i> in the rupy root where you store [host]=[pass].<br><br>
 	 * @param <b>domain</b> (host.rupy.se) requires <b>host</b><br><br>
