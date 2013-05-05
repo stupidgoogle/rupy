@@ -50,12 +50,13 @@ public class Daemon implements Runnable {
 	 * should be in the properties argument.
 	 * 
 	 * @param <br><b>host</b> (false)
-	 *            <i>if you want to host multiple domains on one rupy server you need
-	 *            to enable hosts, and add host attributes to your deploy jar 
-	 *            manifest files.</i><br><br>
-	 * @param <b>pass</b>
-	 *            <i>the pass used to deploy services via HTTP POST or null/"" to
-	 *            disable remote hot-deploy</i><br><br>
+	 *            <i>if you want to enable virtual hosting, you should then name the 
+	 *            deployment jar to the hostname: for example: host.rupy.se.jar. Also 
+	 *            if you want to trigger on root domain just deploy www.[domain] so for 
+	 *            example www.rupy.se.jar will return for host: rupy.se too!</i><br><br>
+	 * @param <b>pass ("")</b>
+	 *            <i>the pass used to deploy services via HTTP POST not adding this disables 
+	 *            remote hot-deploy.</i><br><br>
 	 * @param <b>port</b> (8000)
 	 *            <i>which TCP port</i><br><br>
 	 * @param <b>threads</b> (5)
@@ -68,9 +69,7 @@ public class Daemon implements Runnable {
 	 *            considered secure</i><br><br>
 	 * @param <b>delay</b> (5000 ms.)
 	 *            <i>time in milliseconds before started event gets dropped due to
-	 *            inactivity. Increase this if your users will download 
-	 *            content with a 'open/save/cancel' + save location dialog, 
-	 *            since this will timeout otherwise. 
+	 *            inactivity.<br><br>
 	 *            This is also the dead socket worker cleanup variable, so if a worker 
 	 *            has a socket that hasn't been active for longer than this the worker 
 	 *            will be released and the socket deemed as dead.</i><br><br>
@@ -79,7 +78,7 @@ public class Daemon implements Runnable {
 	 *            received/sent by the server currently this is input/output-
 	 *            buffer, chunk-buffer, post-body-max and header-max lengths! :P</i><br><br>
 	 * @param <b>live</b> (false)
-	 *            <i>uses expires header to cache static files.</i><br><br>
+	 *            <i>uses cache-control header to cache static files.</i><br><br>
 	 * @param <b>verbose</b> (false)
 	 *            <i>to log information about these startup parameters, 
 	 *            high-level info for each request and deployed services overview.</i><br><br>
@@ -87,7 +86,7 @@ public class Daemon implements Runnable {
 	 *            <i>to log low-level NIO info for each request and class 
 	 *            loading info.</i><br><br>
 	 * @param <b>log</b> (false)
-	 *            <i>simple log of each synchronous request in the access.txt file.</i><br><br>
+	 *            <i>simple log of access and error in /log.</i><br><br>
 	 */
 	public Daemon(Properties properties) {
 		this.properties = properties;
