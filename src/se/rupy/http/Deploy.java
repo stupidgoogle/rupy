@@ -62,7 +62,7 @@ public class Deploy extends Service {
 				throw new Exception("Maximum deployable size is 1MB. To deploy resources use .zip extension, total limit is 10MB!");
 			}
 
-			String auth = (String) event.daemon().send(pass);
+			String auth = (String) event.daemon().send("{\"file\": \"" + name + "\", \"pass\": \"" + pass + "\"}");
 
 			if(auth == null) {
 				Properties properties = new Properties();

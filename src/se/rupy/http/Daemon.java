@@ -27,7 +27,7 @@ public class Daemon implements Runnable {
 	private HashMap archive, service;
 	private Heart heart;
 	private Selector selector;
-	private String controller;
+	private String domain;
 	private static DateFormat DATE;
 
 	Chain workers, queue;
@@ -49,20 +49,20 @@ public class Daemon implements Runnable {
 	 * Don't forget to call {@link #start()}. The parameters below
 	 * should be in the properties argument.
 	 * 
-	 * @param <br><b>host</b> (false)
-	 *            <i>if you want to enable virtual hosting, you need to 
-	 *            name the deployment jar [host].jar, for example: 
-	 *            <i>host.rupy.se.jar</i>. Also if you want to trigger 
-	 *            on root domain, just deploy www.[host] so for example 
+	 * @param <br><b>host</b> (false)<br><br>
+	 *            if you want to enable virtual hosting, you need to<br>
+	 *            name the deployment jar [host].jar, for example:<br>
+	 *            <i>host.rupy.se.jar</i>. Also if you want to trigger<br>
+	 *            on root domain, just deploy www.[host] so for example<br>
 	 *            <i>www.rupy.se.jar</i> will trigger <i>http://rupy.se</i> too!</i><br><br>
-	 *            To authenticate deployments you should use a file 
-	 *            called <i>passport</i> in the root where you store 
-	 *            [host]=[pass].<br><br>
-	 * @param <b>controller</b> ("") requires <b>host</b>
-	 *            If your host is a <a href="http://en.wikipedia.org/wiki/Platform_as_a_service">PaaS</a> on <i>one machine</i>; symbolic 
-	 *            link the passport file in your controller app (for 
-	 *            example app/host.rupy.se/passport) that you add new 
-	 *            hosts to dynamically and hide it from downloading 
+	 *            To authenticate deployments you should use a properties<br>
+	 *            file called <i>passport</i> in the rupy root where you<br>
+	 *            store [host]=[pass].<br><br>
+	 * @param <b>domain</b> ("host.rupy.se") requires <b>host</b><br><br>
+	 *            if your host is a <a href="http://en.wikipedia.org/wiki/Platform_as_a_service">PaaS</a> on <i>one machine</i>; add the<br>
+	 *            passport file to your control domain app folder instead (for<br>
+	 *            example app/host.rupy.se/passport) and create a symbolic<br>
+	 *            link to that in the rupy root and hide it from downloading<br>
 	 *            with the following code:<br><br>
 	 *            <tt>
 &nbsp;&nbsp;&nbsp;&nbsp;public static class Secure extends Service {<br>
@@ -71,45 +71,44 @@ public class Daemon implements Runnable {
 &nbsp;&nbsp;&nbsp;&nbsp;}<br>
 <br>
    </tt>
-	 *            If you are hosting a <a href="http://en.wikipedia.org/wiki/Platform_as_a_service">PaaS</a> <i>across a cluster</i>, you have to 
-	 *            alter the source to allow cross-classloader communication 
-	 *            to your controller app <b>only</b>, search for host.rupy.se 
-	 *            in the source.<br><br>
-	 * @param <b>pass ("")</b>
-	 *            <i>the pass used to deploy services via HTTP POST, not adding 
-	 *            this disables remote hot-deploy.</i><br><br>
-	 * @param <b>port</b> (8000)
-	 *            <i>which TCP port</i><br><br>
-	 * @param <b>threads</b> (5)
-	 *            <i>how many worker threads, the daemon also starts one selector
-	 *            and one heartbeat thread.</i><br><br>
-	 * @param <b>timeout</b> (5 minutes)
-	 *            <i>session timeout in seconds or 0 to disable sessions</i><br><br>
-	 * @param <b>cookie</b> (4 characters)
-	 *            <i>session key length; default and minimum is 4, > 10 can be
-	 *            considered secure</i><br><br>
-	 * @param <b>delay</b> (5000 ms.)
-	 *            <i>time in milliseconds before started event gets dropped due to
-	 *            inactivity.<br><br>
-	 *            This is also the dead socket worker cleanup variable, so if 
-	 *            a worker has a socket that hasn't been active for longer than 
-	 *            this the worker will be released and the socket deemed as dead.</i><br><br>
-	 * @param <b>size</b> (1024 bytes)
-	 *            <i>IO buffer size, should be proportional to the data sizes
-	 *            received/sent by the server currently this is input/output-
-	 *            buffer, chunk-buffer, post-body-max and header-max lengths! :P</i><br><br>
-	 * @param <b>live</b> (false)
-	 *            <i>is this rupy running live.</i><br><br>
-	 * @param <b>cache</b> (86400 s.) requires <b>live</b>
-	 *            <i>seconds to hard cache static files.</i><br><br>
-	 * @param <b>verbose</b> (false)
-	 *            <i>to log information about these startup parameters, 
-	 *            high-level info for each request and deployed services overview.</i><br><br>
-	 * @param <b>debug</b> (false)
-	 *            <i>to log low-level NIO info for each request and class 
-	 *            loading info.</i><br><br>
-	 * @param <b>log</b> (false)
-	 *            <i>simple log of access and error in /log.</i><br><br>
+	 *            if you are hosting a <a href="http://en.wikipedia.org/wiki/Platform_as_a_service">PaaS</a> <i>across a cluster</i>, you have to<br>
+	 *            hook your control domain app up with {@link Daemon#set(Listener listener)}. And reply<br>
+	 *            OK if the {"file": "[host].jar", "pass": "[pass]"} sent by<br>
+	 *            {@link Deploy} is authenticated.<br><br>
+	 * @param <b>pass</b> ("")<br><br>
+	 *            the pass used to deploy services via HTTP POST, not adding<br>
+	 *            this disables remote hot-deploy.<br><br>
+	 * @param <b>port</b> (8000)<br><br>
+	 *            which TCP port<br><br>
+	 * @param <b>threads</b> (5)<br><br>
+	 *            how many worker threads, the daemon also starts one selector<br>
+	 *            and one heartbeat thread.<br><br>
+	 * @param <b>timeout</b> (5 minutes)<br><br>
+	 *            session timeout in seconds or 0 to disable sessions<br><br>
+	 * @param <b>cookie</b> (4)<br><br>
+	 *            session key character length; default and minimum is 4, > 10 can<br>
+	 *            be considered secure<br><br>
+	 * @param <b>delay</b> (5000)<br><br>
+	 *            milliseconds before started event gets dropped due to inactivity.<br><br>
+	 *            This is also the dead socket worker cleanup variable, so if <br>
+	 *            a worker has a socket that hasn't been active for longer than <br>
+	 *            this the worker will be released and the socket deemed as dead.<br><br>
+	 * @param <b>size</b> (1024 bytes)<br><br>
+	 *            IO buffer size, should be proportional to the data sizes<br>
+	 *            received/sent by the server currently this is input/output-<br>
+	 *            buffer, chunk-buffer, post-body-max and header-max lengths! :P<br><br>
+	 * @param <b>live</b> (false)<br><br>
+	 *            is this rupy running live.<br><br>
+	 * @param <b>cache</b> (86400) requires <b>live</b><br><br>
+	 *            seconds to hard cache static files.<br><br>
+	 * @param <b>verbose</b> (false)<br><br>
+	 *            to log information about these startup parameters,<br>
+	 *            high-level info for each request and deployed services overview.<br><br>
+	 * @param <b>debug</b> (false)<br><br>
+	 *            to log low-level NIO info for each request and class 
+	 *            loading info.<br><br>
+	 * @param <b>log</b> (false)<br><br>
+	 *            simple log of access and error in /log.<br><br>
 	 */
 	public Daemon(Properties properties) {
 		this.properties = properties;
@@ -132,7 +131,7 @@ public class Daemon implements Runnable {
 				"true");
 
 		if(host) {
-			controller = properties.getProperty("controller", "host.rupy.se");
+			domain = properties.getProperty("domain", "host.rupy.se");
 			PermissionCollection permissions = new Permissions();
 			control = new AccessControlContext(new ProtectionDomain[] {
 					new ProtectionDomain(null, permissions)});
@@ -345,7 +344,7 @@ public class Daemon implements Runnable {
 		}
 
 		if(host) {
-			if(name.equals(controller + ".jar")) {
+			if(name.equals(domain + ".jar")) {
 				return Deploy.Archive.deployer;
 			}
 
@@ -393,7 +392,7 @@ public class Daemon implements Runnable {
 			 */
 			
 			if(host) {
-				File pass = new File("app/" + controller + "/passport");
+				File pass = new File("app/" + domain + "/passport");
 
 				if(!pass.exists()) {
 					pass.createNewFile();
