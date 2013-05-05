@@ -121,7 +121,7 @@ public abstract class Input extends InputStream implements Event.Block {
 
 	/**
 	 * Reads a \r\n terminated line of text from the input.
-	 * @return
+	 * @return a line
 	 * @throws IOException
 	 */
 	public String line() throws IOException {

@@ -60,8 +60,9 @@ public class Daemon implements Runnable {
 	 *            if your host is a <a href="http://en.wikipedia.org/wiki/Platform_as_a_service">PaaS</a> on <i>one machine</i>; add the passport<br>
 	 *            file to your control domain app folder instead (for example<br>
 	 *            app/host.rupy.se/passport; hide it from downloading with the<br>
-	 *            code below) and create a symbolic link to that in the rupy root.<br><br>
-	 *            <tt>
+	 *            code below) and create a symbolic link to that in the rupy root.
+	 *            <tt><br>
+<br>
 &nbsp;&nbsp;&nbsp;&nbsp;public static class Secure extends Service {<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;public String path() { return "/passport"; }<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;public void filter(Event event) throws Event, Exception { event.output().print("Nice try!"); }<br>
