@@ -432,6 +432,7 @@ public class Event extends Throwable implements Chain.Link {
 		String key = cookie(query.header("cookie"), "key");
 
 		if(key == null && query.method() == Query.GET) {
+
 			/*
 			 * XSS comet cookie: this means first GETs are parsed!
 			 * TODO: This should be removed because you can use a P3P header to fix this, go figure!
@@ -485,13 +486,13 @@ public class Event extends Throwable implements Chain.Link {
 				session.key(key);
 			}
 
-			synchronized (daemon.session()) {
+			//synchronized (daemon.session()) {
 				if (Event.LOG) {
 					log("new key " + session.key(), VERBOSE);
 				}
 
 				daemon.session().put(session.key(), session);
-			}
+			//}
 		}
 
 		try {

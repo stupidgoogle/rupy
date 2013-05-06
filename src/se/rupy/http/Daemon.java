@@ -50,11 +50,15 @@ public class Daemon implements Runnable {
 	/**
 	 * Don't forget to call {@link #start()}. The parameters below
 	 * should be in the properties argument. The parenthesis contains the default value.<br><br>
+	 * These are also used from the command line, so for example 'java -cp http.jar se.rupy.http.Daemon 
+	 * -pass !@#$ -log -port 80' would enable remote deploy with password '!@#$', run on port 80 (requires 
+	 * root on linux) and turn on logging.
 	 * <table cellpadding="10">
-	 * <tr><td valign="top"><b>pass</b> ()
+	 * <tr><td valign="top"><b>pass</b> (secret)
 	 * </td><td>
 	 *            the pass used to deploy services with {@link Deploy} via HTTP POST, 
-	 *            not adding this disables remote hot-deploy.
+	 *            default is 'secret' and only allows deploys from 127.0.0.1 but that 
+	 *            can be hacked; so change this as soon as possible.
 	 * </td></tr>
 	 * <tr><td valign="top"><b>port</b> (8000)
 	 * </td><td>
@@ -166,9 +170,9 @@ public class Daemon implements Runnable {
 					new ProtectionDomain(null, permissions)});
 		}
 
-		if (!verbose) {
-			debug = false;
-		}
+		//if (!verbose) {
+		//	debug = false;
+		//}
 
 		archive = new HashMap();
 		service = new HashMap();
@@ -698,7 +702,7 @@ public class Daemon implements Runnable {
 	}
 
 	public void run() {
-		String pass = properties.getProperty("pass", "");
+		String pass = properties.getProperty("pass", "secret");
 		ServerSocketChannel server = null;
 
 		try {

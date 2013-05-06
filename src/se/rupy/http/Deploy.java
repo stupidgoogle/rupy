@@ -1,6 +1,7 @@
 package se.rupy.http;
 
 import java.io.*;
+import java.math.BigInteger;
 import java.net.*;
 import java.security.*;
 import java.text.SimpleDateFormat;
@@ -45,10 +46,17 @@ public class Deploy extends Service {
 	}
 
 	public void filter(Event event) throws Event, Exception {
+		if(event.query().method() == Query.GET) {
+			event.output().print(event.session().key());
+			throw event;
+		}
+		
+		String cookie = event.session().key();
+		
 		String name = event.query().header("file");
 		String size = event.query().header("size");
 		String pass = event.query().header("pass");
-
+		
 		if (name == null) {
 			throw new Failure("File header missing.");
 		}
@@ -69,6 +77,9 @@ public class Deploy extends Service {
 				properties.load(new FileInputStream(new File("passport")));
 				String port = properties.getProperty(name.substring(0, name.lastIndexOf('.')));
 
+				port = hash(port);
+				port = hash(port + cookie);
+				
 				if (port == null || !port.equals(pass)) {
 					throw new Exception("Pass verification failed. (" + name + ")");
 				}
@@ -80,10 +91,17 @@ public class Deploy extends Service {
 			}
 		}
 		else {
-			if (!Deploy.pass.equals(pass)) {
+			String port = Deploy.pass;
+			
+			port = hash(port);
+			port = hash(port + cookie);
+			
+			if (!port.equals(pass)) {
 				throw new Failure("Pass verification failed. (" + pass + ")");
-			} else if(Deploy.pass.equals("secret") && !event.remote().equals("127.0.0.1")) {
-				throw new Failure("'secret' pass can only deploy from 127.0.0.1. (" + event.remote() + ")");
+			}
+			
+			if(Deploy.pass.equals("secret") && !event.remote().equals("127.0.0.1")) {
+				throw new Failure("Default pass 'secret' can only deploy from 127.0.0.1. (" + event.remote() + ")");
 			}
 		}
 
@@ -469,21 +487,28 @@ public class Deploy extends Service {
 	}
 
 	static class Client {
+		private String cookie;
+		
 		InputStream send(URL url, File file, String pass) throws IOException {
 			return send(url, file, pass, true);
 		}
 
 		InputStream send(URL url, File file, String pass, boolean chunk) throws IOException {
 			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-			conn.setRequestMethod("POST");
-
+			
 			OutputStream out = null;
 			InputStream in = null;
 
-			if (file != null) {
+			if (file == null) {
+				conn.setRequestMethod("GET");
+			}
+			else {
+				conn.setRequestMethod("POST");
+				
 				conn.addRequestProperty("File", file.getName());
 				conn.addRequestProperty("Size", "" + file.length());
-
+				conn.addRequestProperty("Cookie", cookie);
+				
 				if (pass != null) {
 					conn.addRequestProperty("Pass", pass);
 				}
@@ -505,6 +530,10 @@ public class Deploy extends Service {
 
 			int code = conn.getResponseCode();
 
+			if(file == null) {
+				cookie = conn.getHeaderField("Set-Cookie");
+			}
+			
 			if (code == 200) {
 				in = conn.getInputStream();
 			} else if (code < 0) {
@@ -516,6 +545,10 @@ public class Deploy extends Service {
 			return in;
 		}
 
+		public String cookie(URL url) throws IOException {
+			return toString(send(url, null, null, false));
+		}
+		
 		static String toString(InputStream in) throws IOException {
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 
@@ -578,12 +611,22 @@ public class Deploy extends Service {
 		}
 	}
 
+	private static String hash(String pass) throws NoSuchAlgorithmException {
+		MessageDigest md = MessageDigest.getInstance("SHA-256");
+		md.update(pass.getBytes(), 0, pass.length());
+		return new BigInteger(1, md.digest()).toString(16);
+	}
+	
 	public static void main(String[] args) {
 		if (args.length > 2) {
 			try {
 				URL url = new URL("http://" + args[0] + "/deploy");
 				File file = new File(args[1]);
-				InputStream in = new Client().send(url, file, args[2]);
+				Client client = new Client();
+				String cookie = client.cookie(url);
+				String pass = hash(args[2]);
+				pass = hash(pass + cookie);
+				InputStream in = client.send(url, file, pass);
 				System.out.println(new SimpleDateFormat("H:mm").format(new Date()));
 				Client.toStream(in, System.out);
 				System.out.println("");
@@ -591,6 +634,8 @@ public class Deploy extends Service {
 				System.out
 				.println("Connection failed, is there a server running on "
 						+ args[0] + "?");
+			} catch (NoSuchAlgorithmException nsae) {
+				System.out.println("Could not hash with SHA-256?");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

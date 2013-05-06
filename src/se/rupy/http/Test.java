@@ -221,7 +221,7 @@ class Test implements Runnable {
 		} else if(name.equals("never")) {
 			((HttpURLConnection) url.openConnection()).getResponseCode();
 		} else {
-			save(name, new Deploy.Client().send(url, file, null, true));
+			save(name, new Deploy.Client().send(url, file, null));
 		}
 	}
 
