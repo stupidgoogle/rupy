@@ -401,8 +401,8 @@ public class Daemon implements Runnable {
 	 * Send Object to listener. We recommend you only send bootclasspath loaded 
 	 * classes here otherwise hotdeploy will fail.
 	 * 
-	 * @param message
-	 * @return null if no listener was added or reply message.
+	 * @param message to send
+	 * @return reply message
 	 * @throws Exception
 	 */
 	public Object send(Object message) throws Exception {
