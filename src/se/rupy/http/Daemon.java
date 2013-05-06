@@ -98,7 +98,7 @@ public class Daemon implements Runnable {
 	 *            seconds to hard cache static files.
 	 * </td></tr>
 	 * <tr><td valign="top"><b>verbose</b> (false)
-	 * </td><td>
+	 * </td><td valign="top">
 	 *            to log information about these startup parameters, high-level 
 	 *            info for each request and deployed services overview.
 	 * </td></tr>
