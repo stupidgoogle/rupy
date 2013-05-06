@@ -19,15 +19,12 @@ import java.nio.channels.*;
  * use.<br>
  * <br>
  * The hierarchy of the code is as follows:
- * <tt><br>
-<br>
-&nbsp;&nbsp;&nbsp;<a href="http://rupy.se/doc/se/rupy/http/Event.html" class="not">Event</a>&nbsp;-+--&nbsp;<a href="http://rupy.se/doc/se/rupy/http/Query.html" class="not">Query</a>&nbsp;&lt;--&nbsp;<a href="http://rupy.se/doc/se/rupy/http/Input.html" class="not">Input</a>&nbsp;&lt;---&nbsp;+-----------+<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;X&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;Browser&nbsp;&nbsp;|<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+-&gt;&nbsp;<a href="http://rupy.se/doc/se/rupy/http/Reply.html" class="not">Reply</a>&nbsp;--&gt;&nbsp;<a href="http://rupy.se/doc/se/rupy/http/Output.html" class="not">Output</a>&nbsp;--&gt;&nbsp;+-----------+<br>
-<br>
-   </tt>
+<tt><br><br>
+&nbsp;&nbsp;&nbsp;&nbsp;public static class Secure extends Service {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;public String path() { return "/passport"; }<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;public void filter(Event event) throws Event, Exception { event.output().print("Nice try!"); }<br>
+&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+<br></tt>
  * Where X marks the potential Comet pause point.
  * 
  * @author marc
