@@ -228,5 +228,6 @@ VERSION:
       0.4.5
       
       - Adds pid.txt if run as app.
+      - Added SHA-256 cookie salted hashing of pass for secure deployment.
         
 have fun!
