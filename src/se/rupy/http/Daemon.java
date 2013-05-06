@@ -153,15 +153,15 @@ public class Daemon implements Runnable {
 		delay = Integer.parseInt(properties.getProperty("delay", "5000"));
 		size = Integer.parseInt(properties.getProperty("size", "1024"));
 		cache = Integer.parseInt(properties.getProperty("cache", "86400"));
-
+		
 		verbose = properties.getProperty("verbose", "false").toLowerCase()
-				.equals("true");
+		.equals("true");
 		debug = properties.getProperty("debug", "false").toLowerCase().equals(
-				"true");
+		"true");
 		host = properties.getProperty("host", "false").toLowerCase().equals(
-				"true");
+		"true");
 		panel = properties.getProperty("panel", "false").toLowerCase().equals(
-				"true");
+		"true");
 
 		if(host) {
 			domain = properties.getProperty("domain", "host.rupy.se");
@@ -186,7 +186,7 @@ public class Daemon implements Runnable {
 			out = new PrintStream(System.out, true, "UTF-8");
 
 			if(properties.getProperty("log") != null || properties.getProperty("test", "false").toLowerCase().equals(
-					"true")) {
+			"true")) {
 				log();
 			}
 		} catch (Exception e) {
@@ -288,7 +288,7 @@ public class Daemon implements Runnable {
 			heart = new Heart();
 
 			int threads = Integer.parseInt(properties.getProperty("threads",
-					"5"));
+			"5"));
 
 			for (int i = 0; i < threads; i++) {
 				workers.add(new Worker(this, i));
@@ -380,9 +380,9 @@ public class Daemon implements Runnable {
 			if(name.equals(domain + ".jar")) {
 				return Deploy.Archive.deployer;
 			}
-
+			
 			Deploy.Archive archive = (Deploy.Archive) this.archive.get(name);
-
+			
 			if(archive == null) {
 				return (Deploy.Archive) this.archive.get("www." + name);
 			}
@@ -407,7 +407,7 @@ public class Daemon implements Runnable {
 	 */
 	public Object send(Object message) throws Exception {
 		if(listener == null) {
-			return null;
+			return message;
 		}
 
 		return listener.receive(message);
@@ -606,7 +606,7 @@ public class Daemon implements Runnable {
 		if(!this.host) {
 			host = "content";
 		}
-
+		
 		File file = new File("app" + File.separator + host + File.separator + path);
 
 		if(file.exists() && !file.isDirectory()) {
@@ -649,7 +649,7 @@ public class Daemon implements Runnable {
 		if(!this.host) {
 			host = "content";
 		}
-
+		
 		synchronized (this.archive) {
 			if(this.host) {
 				Deploy.Archive archive = (Deploy.Archive) this.archive.get(host + ".jar");
@@ -702,7 +702,7 @@ public class Daemon implements Runnable {
 	}
 
 	public void run() {
-		String pass = properties.getProperty("pass", "secret");
+		String pass = properties.getProperty("pass", "");
 		ServerSocketChannel server = null;
 
 		try {
@@ -788,7 +788,7 @@ public class Daemon implements Runnable {
 			}
 
 			if (properties.getProperty("test", "false").toLowerCase().equals(
-					"true")) {
+			"true")) {
 				new Test(this, 1);
 			}
 		} catch (Exception e) {
@@ -803,15 +803,15 @@ public class Daemon implements Runnable {
 		while (alive) {
 			try {
 				selector.select();
-
+				
 				Set set = selector.selectedKeys();
 				int valid = 0, accept = 0, readwrite = 0, selected = set.size();
 				Iterator it = set.iterator();
-
+				
 				while (it.hasNext()) {
 					key = (SelectionKey) it.next();
 					it.remove();
-
+					
 					if (key.isValid()) {
 						valid++;
 						if (key.isAcceptable()) {
@@ -837,7 +837,7 @@ public class Daemon implements Runnable {
 										event.log("write ---");
 								}
 							}
-
+							
 							if (key.isReadable() && event.push()) {
 								event.disconnect(null);
 							} else if (worker == null) {
@@ -1020,7 +1020,7 @@ public class Daemon implements Runnable {
 					value = null;
 				}
 			}
-			//System.out.println(flag + " " + value);
+
 			if (value == null) {
 				properties.put(flag.substring(1).toLowerCase(), "true");
 			} else {
@@ -1035,7 +1035,7 @@ public class Daemon implements Runnable {
 		}
 
 		new Daemon(properties).start();
-
+		
 		/*
 		 * If this is run as an application we log PID to pid.txt file in root.
 		 */
