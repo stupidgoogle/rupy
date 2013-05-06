@@ -49,10 +49,7 @@ public abstract class Service implements Chain.Link {
 	 * 
 	 * <pre>
 	 * event.daemon().chain("/login").filter(event);
-	 * throw event; // stop the chain
-	 * </pre>
-	 * 
-	 * or
+	 * throw event; // stop the chain</pre>or
 	 * 
 	 * <pre>
 	 * event.reply().header(&quot;Location&quot;, &quot;/login&quot;);
