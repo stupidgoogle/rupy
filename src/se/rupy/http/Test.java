@@ -214,7 +214,7 @@ class Test implements Runnable {
 		URL url = new URL("http://" + host + "/" + name);
 
 		if (name.equals("error")) {
-			String error = Deploy.Client.toString(new Deploy.Client().send(url, null, null, true));
+			String error = Deploy.Client.toString(new Deploy.Client().send(url, null, null, false, true));
 			if(error.indexOf("Error successful") == -1) {
 				failed = true;
 			}

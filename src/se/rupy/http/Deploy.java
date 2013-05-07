@@ -53,8 +53,13 @@ public class Deploy extends Service {
 		
 		String cookie = event.session().key();
 		
+		if(cookie == event.session().string("cookie", "")) {
+			throw new Exception("Cookie allready used!");
+		}
+		
 		String name = event.query().header("file");
 		String size = event.query().header("size");
+		boolean cluster = Boolean.parseBoolean(event.query().header("cluster"));
 		String pass = event.query().header("pass");
 		
 		if (name == null) {
@@ -70,15 +75,18 @@ public class Deploy extends Service {
 				throw new Exception("Maximum deployable size is 1MB. To deploy resources use .zip extension, total limit is 10MB!");
 			}
 
-			String auth = (String) event.daemon().send("{\"file\": \"" + name + "\", \"pass\": \"" + pass + "\"}");
+			String message = "{\"type\": \"auth\", \"file\": \"" + name + "\", \"pass\": \"" + pass + "\"}";
+			String auth = (String) event.daemon().send(message);
 
-			if(auth == null) {
+			if(auth.equals(message)) {
 				Properties properties = new Properties();
 				properties.load(new FileInputStream(new File("passport")));
 				String port = properties.getProperty(name.substring(0, name.lastIndexOf('.')));
 
 				port = hash(port);
 				port = hash(port + cookie);
+				
+				event.session().put("cookie", cookie);
 				
 				if (port == null || !port.equals(pass)) {
 					throw new Exception("Pass verification failed. (" + name + ")");
@@ -95,6 +103,8 @@ public class Deploy extends Service {
 			
 			port = hash(port);
 			port = hash(port + cookie);
+			
+			event.session().put("cookie", cookie);
 			
 			if (!port.equals(pass)) {
 				throw new Failure("Pass verification failed. (" + pass + ")");
@@ -125,6 +135,15 @@ public class Deploy extends Service {
 		out.flush();
 		out.close();
 
+		if (Deploy.pass == null) {
+			String message = "{\"type\": \"done\", \"file\": \"" + name + "\", \"cluster\": \"" + cluster + "\"}";
+			String done = (String) event.daemon().send(message);
+			
+			if(done.equals("OK")) {
+				event.reply().output().print("Deploy is propagating on cluster.");
+			}
+		}
+		
 		try {
 			event.reply().output().print("Application '" + deploy(event.daemon(), file, event) + "' deployed.");
 		}
@@ -138,7 +157,7 @@ public class Deploy extends Service {
 		}
 	}
 
-	public static String deploy(Daemon daemon, File file, Event event) throws Exception {
+	protected static String deploy(Daemon daemon, File file, Event event) throws Exception {
 		Archive archive = new Archive(daemon, file, event);
 
 		daemon.chain(archive);
@@ -490,10 +509,10 @@ public class Deploy extends Service {
 		private String cookie;
 		
 		InputStream send(URL url, File file, String pass) throws IOException {
-			return send(url, file, pass, true);
+			return send(url, file, pass, false, true);
 		}
 
-		InputStream send(URL url, File file, String pass, boolean chunk) throws IOException {
+		InputStream send(URL url, File file, String pass, boolean cluster, boolean chunk) throws IOException {
 			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 			
 			OutputStream out = null;
@@ -507,6 +526,7 @@ public class Deploy extends Service {
 				
 				conn.addRequestProperty("File", file.getName());
 				conn.addRequestProperty("Size", "" + file.length());
+				conn.addRequestProperty("Cluster", "" + cluster);
 				conn.addRequestProperty("Cookie", cookie);
 				
 				if (pass != null) {
@@ -546,7 +566,7 @@ public class Deploy extends Service {
 		}
 
 		public String cookie(URL url) throws IOException {
-			return toString(send(url, null, null, false));
+			return toString(send(url, null, null, false, false));
 		}
 		
 		static String toString(InputStream in) throws IOException {
@@ -617,19 +637,26 @@ public class Deploy extends Service {
 		return new BigInteger(1, md.digest()).toString(16);
 	}
 	
+	public static void deploy(String host, String name, String pass, boolean cluster) throws IOException, NoSuchAlgorithmException {
+		URL url = new URL("http://" + host + "/deploy");
+		File file = new File(name);
+		Client client = new Client();
+		String cookie = client.cookie(url);
+		String port = hash(pass);
+		port = hash(port + cookie);
+		InputStream in = client.send(url, file, port, cluster, true);
+		System.out.println(new SimpleDateFormat("H:mm").format(new Date()));
+		Client.toStream(in, System.out);
+		System.out.println("");
+		
+		// test cookie reuse hack
+		//in = client.send(url, file, port, cluster, true);
+	}
+	
 	public static void main(String[] args) {
 		if (args.length > 2) {
 			try {
-				URL url = new URL("http://" + args[0] + "/deploy");
-				File file = new File(args[1]);
-				Client client = new Client();
-				String cookie = client.cookie(url);
-				String pass = hash(args[2]);
-				pass = hash(pass + cookie);
-				InputStream in = client.send(url, file, pass);
-				System.out.println(new SimpleDateFormat("H:mm").format(new Date()));
-				Client.toStream(in, System.out);
-				System.out.println("");
+				deploy(args[0], args[1], args[2], false);
 			} catch (ConnectException ce) {
 				System.out
 				.println("Connection failed, is there a server running on "

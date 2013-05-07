@@ -138,8 +138,12 @@ public class Daemon implements Runnable {
 	 *            if you are hosting a <a href="http://en.wikipedia.org/wiki/Platform_as_a_service">PaaS</a> 
 	 *            <i>across a cluster</i>, you have to hook your control domain app up with 
 	 *            {@link Daemon#set(Listener listener)}. And reply "OK" if the 
-	 *            "{"file": "[host].jar", "pass": "[pass]"}" sent by {@link Deploy} 
-	 *            authenticates.
+	 *            "{"type": "auth", "file": "[host].jar", "pass": "[pass]"}" sent by {@link Deploy} 
+	 *            authenticates. Then you can propagate the deploy <i>after</i> you reply "OK" to 
+	 *            "{"type": "done", "file": "[host].jar", "cluster": "false"}" where <i>cluster</i> 
+	 *            is a boolean to avoid recursive cluster propagation. Your domain controller 
+	 *            should use {@link Deploy#deploy(String host, String name, String pass, boolean cluster)} 
+	 *            with cluster=true to propagate, and not propagate when it receives cluster=true.
 	 * </td></tr>
 	 * </table>
 	 */
