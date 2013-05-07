@@ -82,7 +82,7 @@ public class Daemon implements Runnable {
 	 *            milliseconds before started event gets dropped due to inactivity. 
 	 *            This is also the dead socket worker cleanup variable, so if 
 	 *            a worker has a socket that hasn't been active for longer than 
-	 *            this the worker will be released and the socket deemed as dead.
+	 *            this; the worker will be released and the socket deemed as dead.
 	 * </td></tr>
 	 * <tr><td valign="top"><b>size</b> (1024)</td><td>
 	 *            IO buffer size in bytes, should be proportional to the data sizes 

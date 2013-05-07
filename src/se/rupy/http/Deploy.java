@@ -134,18 +134,13 @@ public class Deploy extends Service {
 
 		out.flush();
 		out.close();
-
-		if (Deploy.pass == null && !cluster) {
-			String message = "{\"type\": \"done\", \"file\": \"" + name + "\"}";
-			String done = (String) event.daemon().send(message);
-			
-			if(done.equals("OK")) {
-				event.reply().output().println("Deploy is propagating on cluster.");
-			}
-		}
+		
+		/*
+		 * Deploy LOCAL
+		 */
 		
 		try {
-			event.reply().output().print("Application '" + deploy(event.daemon(), file, event) + "' deployed.");
+			event.reply().output().println("Application '" + deploy(event.daemon(), file, event) + "' deployed.");
 		}
 		catch(Error e) {
 			StringWriter trace = new StringWriter();
@@ -154,6 +149,20 @@ public class Deploy extends Service {
 
 			event.reply().code("500 Internal Server Error");
 			event.reply().output().print("<pre>" + trace.toString() + "</pre>");
+			throw event;
+		}
+		
+		/*
+		 * Deploy CLUSTER
+		 */
+		
+		if (Deploy.pass == null && !cluster) {
+			String message = "{\"type\": \"done\", \"file\": \"" + name + "\"}";
+			String done = (String) event.daemon().send(message);
+			
+			if(done.equals("OK")) {
+				event.reply().output().println("Deploy is propagating on cluster.");
+			}
 		}
 	}
 
@@ -644,7 +653,6 @@ public class Deploy extends Service {
 		InputStream in = client.send(url, file, port, cluster, true);
 		System.out.println(new SimpleDateFormat("H:mm").format(new Date()));
 		Client.toStream(in, System.out);
-		System.out.println("");
 		
 		// test cookie reuse hack
 		//in = client.send(url, file, port, cluster, true);
