@@ -637,14 +637,14 @@ public class Deploy extends Service {
 		return new BigInteger(1, md.digest()).toString(16);
 	}
 	
-	public static void deploy(String host, String name, String pass, boolean cluster) throws IOException, NoSuchAlgorithmException {
+	public static void deploy(String host, String file, String pass, boolean cluster) throws IOException, NoSuchAlgorithmException {
 		URL url = new URL("http://" + host + "/deploy");
-		File file = new File(name);
+		File fila = new File(file);
 		Client client = new Client();
 		String cookie = client.cookie(url);
 		String port = hash(pass);
 		port = hash(port + cookie);
-		InputStream in = client.send(url, file, port, cluster, true);
+		InputStream in = client.send(url, fila, port, cluster, true);
 		System.out.println(new SimpleDateFormat("H:mm").format(new Date()));
 		Client.toStream(in, System.out);
 		System.out.println("");

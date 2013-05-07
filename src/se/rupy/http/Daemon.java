@@ -141,7 +141,7 @@ public class Daemon implements Runnable {
 <tt><br><br>
 &nbsp;&nbsp;&nbsp;&nbsp;{"type": "auth", "file": "[host].jar", "pass": "[pass]"}<br>
 <br></tt>
-	 *            Then you can propagate the deploy with {@link Deploy#deploy(String host, String name, String pass, boolean cluster)} 
+	 *            Then you can propagate the deploy with {@link Deploy#deploy(String host, String file, String pass, boolean cluster)} 
 	 *            <i>after</i> you reply "OK" to the "done" message, where <i>cluster</i> is a boolean to avoid 
 	 *            recursive cluster propagation.
 <tt><br><br>
