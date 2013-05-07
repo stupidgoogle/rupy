@@ -135,12 +135,12 @@ public class Deploy extends Service {
 		out.flush();
 		out.close();
 
-		if (Deploy.pass == null) {
-			String message = "{\"type\": \"done\", \"file\": \"" + name + "\", \"cluster\": \"" + cluster + "\"}";
+		if (Deploy.pass == null && !cluster) {
+			String message = "{\"type\": \"done\", \"file\": \"" + name + "\"}";
 			String done = (String) event.daemon().send(message);
 			
 			if(done.equals("OK")) {
-				event.reply().output().print("Deploy is propagating on cluster.");
+				event.reply().output().println("Deploy is propagating on cluster.");
 			}
 		}
 		
@@ -630,21 +630,18 @@ public class Deploy extends Service {
 			// geez
 		}
 	}
-
-	private static String hash(String pass) throws NoSuchAlgorithmException {
-		MessageDigest md = MessageDigest.getInstance("SHA-256");
-		md.update(pass.getBytes(), 0, pass.length());
-		return new BigInteger(1, md.digest()).toString(16);
+	
+	public static void deploy(String host, File file, String pass) throws IOException, NoSuchAlgorithmException {
+		deploy(host, file, pass, true);
 	}
 	
-	public static void deploy(String host, String file, String pass, boolean cluster) throws IOException, NoSuchAlgorithmException {
+	private static void deploy(String host, File file, String pass, boolean cluster) throws IOException, NoSuchAlgorithmException {
 		URL url = new URL("http://" + host + "/deploy");
-		File fila = new File(file);
 		Client client = new Client();
 		String cookie = client.cookie(url);
 		String port = hash(pass);
 		port = hash(port + cookie);
-		InputStream in = client.send(url, fila, port, cluster, true);
+		InputStream in = client.send(url, file, port, cluster, true);
 		System.out.println(new SimpleDateFormat("H:mm").format(new Date()));
 		Client.toStream(in, System.out);
 		System.out.println("");
@@ -653,10 +650,16 @@ public class Deploy extends Service {
 		//in = client.send(url, file, port, cluster, true);
 	}
 	
+	private static String hash(String pass) throws NoSuchAlgorithmException {
+		MessageDigest md = MessageDigest.getInstance("SHA-256");
+		md.update(pass.getBytes(), 0, pass.length());
+		return new BigInteger(1, md.digest()).toString(16);
+	}
+	
 	public static void main(String[] args) {
 		if (args.length > 2) {
 			try {
-				deploy(args[0], args[1], args[2], false);
+				deploy(args[0], new File(args[1]), args[2], false);
 			} catch (ConnectException ce) {
 				System.out
 				.println("Connection failed, is there a server running on "
