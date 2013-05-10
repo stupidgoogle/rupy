@@ -785,7 +785,7 @@ public class Daemon implements Runnable {
 
 							if(worker.event() != null) {
 								event.output().println(", ");
-								event.output().println("  event: {index: " + worker.event() + ", init: " + worker.event().reply().output.init + ", done: " + worker.event().reply().output.done + "}");
+								event.output().println("  event: {index: " + worker.event().index() + ", init: " + worker.event().reply().output.init + ", done: " + worker.event().reply().output.done + "}");
 								event.output().println(" }");
 							}
 							else {

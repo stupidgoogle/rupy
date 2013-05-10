@@ -8,10 +8,10 @@ import java.nio.*;
  * @author marc.larue
  */
 public abstract class Input extends InputStream implements Event.Block {
-	private boolean chunk, init;
 	private byte[] one = new byte[1];
-	private int available, length;
-	private Event event;
+	protected boolean chunk, init;
+	protected int available, length;
+	protected Event event;
 
 	protected Input(Event event) throws IOException {
 		this.event = event;
@@ -151,7 +151,7 @@ public abstract class Input extends InputStream implements Event.Block {
 
 	static class Chunked extends Input {
 		private byte[] one = new byte[1];
-		private int length;
+		private int count;
 
 		protected Chunked(Event event) throws IOException {
 			super(event);
@@ -173,7 +173,7 @@ public abstract class Input extends InputStream implements Event.Block {
 				return real(b, off, len);
 			}
 
-			if (length == 0) {
+			if (count == 0) {
 				boolean done = false;
 				int c = real();
 
@@ -193,40 +193,41 @@ public abstract class Input extends InputStream implements Event.Block {
 							throw new IOException("Chunked input.");
 						}
 
-						length = length * 16 + val;
+						count = count * 16 + val;
 					}
 
 					c = real();
 				}
 
-				if (length == 0) {
+				if (count == 0) {
 					return -1; // chunked EOF
 				}
 			}
 
-			if (len > length) {
-				len = length;
+			if (len > count) {
+				len = count;
 			}
 
 			int read = real(b, off, len);
 
-			if (read == length) {
+			if (read == count) {
 				real();
 				real();
 			}
 
 			if (read > 0) {
-				length -= read;
+				count -= read;
 			}
 
 			return read;
 		}
-	}
-	
-	public String toString() {
-		return "    chunk: " + chunk + Output.EOL + 
-				"    init: " + init + Output.EOL + 
-				"    available: " + available + Output.EOL + 
-				"    length: " + length + Output.EOL;
+		
+		public String toString() {
+			return "    chunk: " + chunk + Output.EOL + 
+					"    init: " + init + Output.EOL + 
+					"    available: " + available + Output.EOL + 
+					"    length: " + length + Output.EOL + 
+					"      count: " + count + Output.EOL;
+		}
 	}
 }
