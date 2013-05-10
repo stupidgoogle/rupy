@@ -222,4 +222,11 @@ public abstract class Input extends InputStream implements Event.Block {
 			return read;
 		}
 	}
+	
+	public String toString() {
+		return "    chunk: " + chunk + Output.EOL + 
+				"    init: " + init + Output.EOL + 
+				"    available: " + available + Output.EOL + 
+				"    length: " + length + Output.EOL;
+	}
 }

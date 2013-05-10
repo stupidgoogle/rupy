@@ -205,4 +205,12 @@ public class Reply {
 		
 		return OK;
 	}
+	
+	public String toString() {
+		return "  type: " + type + Output.EOL + 
+				"  headers: " + headers + Output.EOL + 
+				"  modified: " + modified + Output.EOL + 
+				"  code: " + code + Output.EOL + 
+				output;
+	}
 }

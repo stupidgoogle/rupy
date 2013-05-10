@@ -459,4 +459,13 @@ public abstract class Output extends OutputStream implements Event.Block {
 			super.flush();
 		}
 	}
+	
+	public String toString() {
+		return "    length: " + length + Output.EOL + 
+				"    size: " + size + Output.EOL + 
+				"    init: " + init + Output.EOL + 
+				"    push: " + push + Output.EOL + 
+				"    fixed: " + fixed + Output.EOL + 
+				"    done: " + done + Output.EOL;
+	}
 }

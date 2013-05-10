@@ -257,4 +257,17 @@ public class Query extends Hash {
 	public Input input() {
 		return input;
 	}
+	
+	public String toString() {
+		return "  path: " + path + Output.EOL + 
+				"  version: " + version + Output.EOL + 
+				"  parameters: " + parameters + Output.EOL + 
+				"  headers: " + headers + Output.EOL + 
+				"  method: " + method + Output.EOL + 
+				"  length: " + length + Output.EOL + 
+				"  modified: " + modified + Output.EOL + 
+				"  done: " + done + Output.EOL + 
+				"  parsed: " + parsed + Output.EOL + 
+				input;
+	}
 }

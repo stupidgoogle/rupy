@@ -33,6 +33,8 @@ public class Worker implements Runnable, Chain.Link {
 		in = ByteBuffer.allocateDirect(daemon.size);
 		out = ByteBuffer.allocateDirect(daemon.size);
 
+		chunk = new byte[daemon.size + Output.Chunked.OFFSET + 2];
+		
 		date = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US);
 		date.setTimeZone(TimeZone.getTimeZone("GMT"));
 
@@ -57,10 +59,6 @@ public class Worker implements Runnable, Chain.Link {
 	}
 
 	protected byte[] chunk() {
-		if(chunk == null) {
-			chunk = new byte[daemon.size + Output.Chunked.OFFSET + 2];
-		}
-
 		return chunk;
 	}
 
@@ -136,6 +134,12 @@ public class Worker implements Runnable, Chain.Link {
 
 			if(lock > daemon.delay) {
 				reset(new Exception("Threadlock " + lock + " (" + event.query().path() + ")"));
+				
+				try {
+					daemon.error.write(event.toString().getBytes());
+				}
+				catch(IOException e) {}
+				
 				event = null;
 				return false;
 			}

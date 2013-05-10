@@ -553,10 +553,6 @@ public class Event extends Throwable implements Chain.Link {
 		return buffer.toString();
 	}
 
-	public String toString() {
-		return String.valueOf(index);
-	}
-
 	/**
 	 * @return true if the Event is being recycled due to a call to
 	 *         {@link Reply#wakeup()}.
@@ -610,5 +606,15 @@ public class Event extends Throwable implements Chain.Link {
 
 			return fail;
 		}
+	}
+	
+	public String toString() {
+		return "index: " + index + Output.EOL + 
+				"interest: " + interest + Output.EOL + 
+				"remote: " + remote + Output.EOL + 
+				"close: " + close + Output.EOL + 
+				"touch: " + touch + Output.EOL + 
+				query + 
+				reply;
 	}
 }
