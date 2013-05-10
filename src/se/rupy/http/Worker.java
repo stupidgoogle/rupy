@@ -162,10 +162,6 @@ public class Worker implements Runnable, Chain.Link {
 		alive = false;
 	}
 
-	public String toString() {
-		return String.valueOf(index);
-	}
-
 	public void run() {
 		touch = System.currentTimeMillis();
 
@@ -215,5 +211,16 @@ public class Worker implements Runnable, Chain.Link {
 
 		out.clear();
 		in.clear();
+	}
+	
+	public String toString() {
+		return "worker: " + index + Output.EOL + 
+				"in: " + in + Output.EOL + 
+				"out: " + out + Output.EOL + 
+				"chunk: " + new String(chunk) + Output.EOL + 
+				"lock: " + lock + Output.EOL + 
+				"awake: " + awake + Output.EOL + 
+				"alive: " + alive + Output.EOL + 
+				"touch: " + touch + Output.EOL;
 	}
 }

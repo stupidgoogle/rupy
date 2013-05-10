@@ -609,12 +609,13 @@ public class Event extends Throwable implements Chain.Link {
 	}
 	
 	public String toString() {
-		return "index: " + index + Output.EOL + 
+		return "event: " + index + Output.EOL + 
 				"interest: " + interest + Output.EOL + 
 				"remote: " + remote + Output.EOL + 
 				"close: " + close + Output.EOL + 
 				"touch: " + touch + Output.EOL + 
 				query + 
-				reply;
+				reply + 
+				worker;
 	}
 }
