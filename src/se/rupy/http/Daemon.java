@@ -139,7 +139,7 @@ public class Daemon implements Runnable {
 	 *            <i>across a cluster</i>, you have to hook your control domain app up with 
 	 *            {@link Daemon#set(Listener listener)}. And reply "OK" if the "auth" message authenticates:
 <tt><br><br>
-&nbsp;&nbsp;&nbsp;&nbsp;{"type": "auth", "file": "[host].jar", "pass": "[pass]"}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{"type": "auth", "file": "[host].jar", "pass": "[pass]", \"cookie\": "[salt]"}<br>
 <br></tt>
 	 *            Then you can propagate the deploy with {@link Deploy#deploy(String host, File file, String pass)} 
 	 *            <i>AFTER</i> you reply "OK" to the "done" message:
@@ -159,15 +159,15 @@ public class Daemon implements Runnable {
 		delay = Integer.parseInt(properties.getProperty("delay", "5000"));
 		size = Integer.parseInt(properties.getProperty("size", "1024"));
 		cache = Integer.parseInt(properties.getProperty("cache", "86400"));
-		
+
 		verbose = properties.getProperty("verbose", "false").toLowerCase()
-		.equals("true");
+				.equals("true");
 		debug = properties.getProperty("debug", "false").toLowerCase().equals(
-		"true");
+				"true");
 		host = properties.getProperty("host", "false").toLowerCase().equals(
-		"true");
+				"true");
 		panel = properties.getProperty("panel", "false").toLowerCase().equals(
-		"true");
+				"true");
 
 		if(host) {
 			domain = properties.getProperty("domain", "host.rupy.se");
@@ -192,7 +192,7 @@ public class Daemon implements Runnable {
 			out = new PrintStream(System.out, true, "UTF-8");
 
 			if(properties.getProperty("log") != null || properties.getProperty("test", "false").toLowerCase().equals(
-			"true")) {
+					"true")) {
 				log();
 			}
 		} catch (Exception e) {
@@ -294,7 +294,7 @@ public class Daemon implements Runnable {
 			heart = new Heart();
 
 			int threads = Integer.parseInt(properties.getProperty("threads",
-			"5"));
+					"5"));
 
 			for (int i = 0; i < threads; i++) {
 				workers.add(new Worker(this, i));
@@ -386,9 +386,9 @@ public class Daemon implements Runnable {
 			if(name.equals(domain + ".jar")) {
 				return Deploy.Archive.deployer;
 			}
-			
+
 			Deploy.Archive archive = (Deploy.Archive) this.archive.get(name);
-			
+
 			if(archive == null) {
 				return (Deploy.Archive) this.archive.get("www." + name);
 			}
@@ -429,7 +429,7 @@ public class Daemon implements Runnable {
 			/*
 			 * So only the controller can be added as listener since we use this feature to authenticate deployments.
 			 */
-			
+
 			if(host) {
 				File pass = new File("app/" + domain + "/passport");
 
@@ -612,7 +612,7 @@ public class Daemon implements Runnable {
 		if(!this.host) {
 			host = "content";
 		}
-		
+
 		File file = new File("app" + File.separator + host + File.separator + path);
 
 		if(file.exists() && !file.isDirectory()) {
@@ -655,7 +655,7 @@ public class Daemon implements Runnable {
 		if(!this.host) {
 			host = "content";
 		}
-		
+
 		synchronized (this.archive) {
 			if(this.host) {
 				Deploy.Archive archive = (Deploy.Archive) this.archive.get(host + ".jar");
@@ -721,21 +721,32 @@ public class Daemon implements Runnable {
 			DecimalFormat decimal = (DecimalFormat) DecimalFormat.getInstance();
 			decimal.applyPattern("#.##");
 
-			if (verbose)
+			if (verbose) {
+				boolean live = properties.getProperty("live", "false").toLowerCase().equals("true");
+				
 				out.println("daemon started\n" + "- pass       \t"
-						+ pass + "\n" + "- port       \t" + port + "\n"
-						+ "- worker(s)  \t" + threads + " thread"
-						+ (threads > 1 ? "s" : "") + "\n" + 
-						"- session    \t" + cookie + " characters\n" + 
-						"- timeout    \t"
-						+ decimal.format((double) timeout / 60000) + " minute"
-						+ (timeout / 60000 > 1 ? "s" : "") + "\n"
-						+ "- IO timeout \t" + delay + " ms." + "\n"
-						+ "- IO buffer  \t" + size + " bytes\n"
-						+ "- debug      \t" + debug + "\n"
-						+ "- live       \t" + properties.getProperty("live", "false").toLowerCase()
-						.equals("true"));
+					+ pass + "\n" + "- port       \t" + port + "\n"
+					+ "- worker(s)  \t" + threads + " thread"
+					+ (threads > 1 ? "s" : "") + "\n" + 
+					"- session    \t" + cookie + " characters\n" + 
+					"- timeout    \t"
+					+ decimal.format((double) timeout / 60000) + " minute"
+					+ (timeout / 60000 > 1 ? "s" : "") + "\n"
+					+ "- IO timeout \t" + delay + " ms." + "\n"
+					+ "- IO buffer  \t" + size + " bytes\n"
+					+ "- debug      \t" + debug + "\n"
+					+ "- live       \t" + live
+				);
+				
+				if(live)
+					out.println("- cache      \t" + cache);
 
+				out.println("- host       \t" + host);
+				
+				if(host)
+					out.println("- domain     \t" + domain);
+			}			
+			
 			if (pass != null && pass.length() > 0 || host) {
 				if(host) {
 					add(new Deploy("app" + File.separator));
@@ -794,7 +805,7 @@ public class Daemon implements Runnable {
 			}
 
 			if (properties.getProperty("test", "false").toLowerCase().equals(
-			"true")) {
+					"true")) {
 				new Test(this, 1);
 			}
 		} catch (Exception e) {
@@ -809,15 +820,15 @@ public class Daemon implements Runnable {
 		while (alive) {
 			try {
 				selector.select();
-				
+
 				Set set = selector.selectedKeys();
 				int valid = 0, accept = 0, readwrite = 0, selected = set.size();
 				Iterator it = set.iterator();
-				
+
 				while (it.hasNext()) {
 					key = (SelectionKey) it.next();
 					it.remove();
-					
+
 					if (key.isValid()) {
 						valid++;
 						if (key.isAcceptable()) {
@@ -843,7 +854,7 @@ public class Daemon implements Runnable {
 										event.log("write ---");
 								}
 							}
-							
+
 							if (key.isReadable() && event.push()) {
 								event.disconnect(null);
 							} else if (worker == null) {
@@ -967,23 +978,33 @@ public class Daemon implements Runnable {
 		}
 
 		public void run() {
+			int socket = 300000;
+			
+			if(timeout > 0) {
+				socket = timeout;
+			}
+			
 			while (alive) {
 				try {
 					Thread.sleep(1000);
 
-					Iterator it = session.values().iterator();
+					Iterator it = null;
+					
+					if(timeout > 0) {
+						it = session.values().iterator();
 
-					while (it.hasNext()) {
-						Session se = (Session) it.next();
+						while (it.hasNext()) {
+							Session se = (Session) it.next();
 
-						if (System.currentTimeMillis() - se.date() > timeout) {
-							it.remove();
-							se.remove();
+							if (System.currentTimeMillis() - se.date() > timeout) {
+								it.remove();
+								se.remove();
 
-							if (Event.LOG) {
-								if (debug)
-									out.println("session timeout "
-											+ se.key());
+								if (Event.LOG) {
+									if (debug)
+										out.println("session timeout "
+												+ se.key());
+								}
 							}
 						}
 					}
@@ -1000,7 +1021,7 @@ public class Daemon implements Runnable {
 					while(it.hasNext()) {
 						Event event = (Event) it.next();
 
-						if(System.currentTimeMillis() - event.last() > timeout) {
+						if(System.currentTimeMillis() - event.last() > socket) {
 							event.disconnect(null);
 						}
 					}
@@ -1041,7 +1062,7 @@ public class Daemon implements Runnable {
 		}
 
 		new Daemon(properties).start();
-		
+
 		/*
 		 * If this is run as an application we log PID to pid.txt file in root.
 		 */

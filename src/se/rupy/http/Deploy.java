@@ -26,7 +26,7 @@ import java.util.jar.*;
  * @author marc
  */
 public class Deploy extends Service {
-	protected static String path, pass;
+	protected static String path, pass, cookie;
 
 	public Deploy(String path, String pass) {
 		Deploy.path = path;
@@ -46,15 +46,28 @@ public class Deploy extends Service {
 	}
 
 	public void filter(Event event) throws Event, Exception {
+		/*
+		 * concurrent deploys will fail without sessions.
+		 * added this just so instances without session can hot-deply.
+		 */
+		if(event.session() == null) {
+			if(cookie == null)
+				cookie = Event.random(4);
+		}
+		else {
+			cookie = event.session().key();
+		}
+		
 		if(event.query().method() == Query.GET) {
-			event.output().print(event.session().key());
+			//System.out.println(cookie);
+			event.output().print(cookie);
 			throw event;
 		}
 		
-		String cookie = event.session().key();
-		
-		if(cookie == event.session().string("cookie", "")) {
-			throw new Exception("Cookie allready used!");
+		if(event.session() != null) {
+			if(cookie == event.session().string("cookie", "")) {
+				throw new Exception("Cookie allready used!");
+			}
 		}
 		
 		String name = event.query().header("file");
@@ -75,7 +88,7 @@ public class Deploy extends Service {
 				throw new Exception("Maximum deployable size is 1MB. To deploy resources use .zip extension, total limit is 10MB!");
 			}
 
-			String message = "{\"type\": \"auth\", \"file\": \"" + name + "\", \"pass\": \"" + pass + "\"}";
+			String message = "{\"type\": \"auth\", \"file\": \"" + name + "\", \"pass\": \"" + pass + "\", \"cookie\": \"" + cookie + "\"}";
 			String auth = (String) event.daemon().send(message);
 
 			if(auth.equals(message)) {
@@ -86,7 +99,8 @@ public class Deploy extends Service {
 				port = hash(port);
 				port = hash(port + cookie);
 				
-				event.session().put("cookie", cookie);
+				if(event.session() != null)
+					event.session().put("cookie", cookie);
 				
 				if (port == null || !port.equals(pass)) {
 					throw new Exception("Pass verification failed. (" + name + ")");
@@ -104,15 +118,19 @@ public class Deploy extends Service {
 			port = hash(port);
 			port = hash(port + cookie);
 			
-			event.session().put("cookie", cookie);
+			if(event.session() != null)
+				event.session().put("cookie", cookie);
 			
 			if (!port.equals(pass)) {
+				//System.out.println(cookie);
 				throw new Failure("Pass verification failed. (" + pass + ")");
 			}
 			
 			if(Deploy.pass.equals("secret") && !event.remote().equals("127.0.0.1")) {
 				throw new Failure("Default pass 'secret' can only deploy from 127.0.0.1. (" + event.remote() + ")");
 			}
+			
+			cookie = null;
 		}
 
 		File file = new File(path + name);

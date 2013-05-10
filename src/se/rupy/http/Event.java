@@ -66,6 +66,16 @@ public class Event extends Throwable implements Chain.Link {
 	private String remote;
 	private boolean close;
 	private long touch;
+	
+	/*
+	 * Since variable chunk length on HTTP requests implementations
+	 * are sparse I needed a way to remove all of the irrelevant 
+	 * headers for comet incoming requests, so I present latest 
+	 * addition to the HTTP spec.
+	 * 
+	 * Head: less
+	 */
+	protected boolean headless;
 
 	protected Event(Daemon daemon, SelectionKey key, int index) throws IOException {
 		touch();
@@ -250,7 +260,9 @@ public class Event extends Throwable implements Chain.Link {
 		if (remote == null) {
 			InetSocketAddress address = (InetSocketAddress) channel.socket()
 			.getRemoteSocketAddress();
-			remote = address.getAddress().getHostAddress();
+			
+			if(address != null)
+				remote = address.getAddress().getHostAddress();
 		}
 
 		if (Event.LOG) {

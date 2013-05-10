@@ -45,7 +45,7 @@ public class Chain extends LinkedList {
 		for (int i = 0; i < size(); i++) {
 			final Service service = (Service) get(i);
 
-			if (event.daemon().timeout > 0) {
+			if (event.daemon().timeout > 0 && !event.headless) {
 				event.session(service);
 			}
 

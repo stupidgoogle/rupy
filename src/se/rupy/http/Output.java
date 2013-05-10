@@ -11,7 +11,7 @@ import java.util.*;
  */
 public abstract class Output extends OutputStream implements Event.Block {
 	public final static String EOL = "\r\n";
-	private final static byte[] server = ("Server: Rupy/0.4.5" + EOL).getBytes();
+	private final static byte[] server = ("Server: Rupy/0.5" + EOL).getBytes();
 	private final static byte[] close = ("Connection: Close" + EOL).getBytes();
 	private final static byte[] alive = ("Connection: Keep-Alive" + EOL).getBytes();
 	private final static byte[] chunked = ("Transfer-Encoding: Chunked" + EOL).getBytes();
@@ -81,7 +81,7 @@ public abstract class Output extends OutputStream implements Event.Block {
 		}
 
 		done = false;
-		
+
 		reply.event().interest(Event.WRITE);
 
 		init = true;
@@ -130,72 +130,75 @@ public abstract class Output extends OutputStream implements Event.Block {
 
 		wrote((reply.event().query().version() + " " + reply.code() + EOL)
 				.getBytes());
-		wrote(("Date: " + reply.event().worker().date().format(new Date()) + EOL)
-				.getBytes());
-		wrote(server);
-		
-		if(!zero()) {
-			wrote(("Content-Type: " + reply.type() + EOL).getBytes());
-		}
-		
-		if (length > -1) {
-			wrote(("Content-Length: " + length + EOL).getBytes());
-		} else {
-			wrote(chunked);
-		}
 
-		if (reply.modified() > 0) {
-			wrote(("Last-Modified: "
-					+ reply.event().worker().date().format(new Date(reply.modified())) + EOL)
+		if(!reply.event().headless) {
+			wrote(("Date: " + reply.event().worker().date().format(new Date()) + EOL)
 					.getBytes());
-		}
+			wrote(server);
 
-		if (fixed && reply.event().daemon().properties.getProperty("live") != null) {
-			wrote(("Cache-Control: max-age=" + reply.event().daemon().cache + EOL)
-					.getBytes());
-			//wrote(("Expires: "
-			//		+ reply.event().worker().date().format(new Date(System.currentTimeMillis() + ((long) 1000 * 60 * 60 * 24 * 365))) + EOL)
-			//		.getBytes());
-		}
+			if(!zero()) {
+				wrote(("Content-Type: " + reply.type() + EOL).getBytes());
+			}
 
-		if (reply.event().session() != null && !reply.event().session().set()) {
-			Session session = reply.event().session();
-			String cookie = "Set-Cookie: key="
-				+ session.key()
-				+ ";"
-				+ (session.expires() > 0 ? " expires="
-						+ reply.event().worker().date().format(new Date(session
-								.expires())) + ";" : "")
-								+ (session.domain() != null ? " domain=" + session.domain()
-										+ ";" : "") + " path=/";
+			if (length > -1) {
+				wrote(("Content-Length: " + length + EOL).getBytes());
+			} else {
+				wrote(chunked);
+			}
 
-			wrote((cookie + EOL).getBytes());
+			if (reply.modified() > 0) {
+				wrote(("Last-Modified: "
+						+ reply.event().worker().date().format(new Date(reply.modified())) + EOL)
+						.getBytes());
+			}
 
-			reply.event().session().set(true);
+			if (fixed && reply.event().daemon().properties.getProperty("live") != null) {
+				wrote(("Cache-Control: max-age=" + reply.event().daemon().cache + EOL)
+						.getBytes());
+				//wrote(("Expires: "
+				//		+ reply.event().worker().date().format(new Date(System.currentTimeMillis() + ((long) 1000 * 60 * 60 * 24 * 365))) + EOL)
+				//		.getBytes());
+			}
 
-			if (Event.LOG) {
-				if (reply.event().daemon().verbose) {
-					reply.event().log("cookie " + cookie, Event.VERBOSE);
+			if (reply.event().session() != null && !reply.event().session().set()) {
+				Session session = reply.event().session();
+				String cookie = "Set-Cookie: key="
+						+ session.key()
+						+ ";"
+						+ (session.expires() > 0 ? " expires="
+								+ reply.event().worker().date().format(new Date(session
+										.expires())) + ";" : "")
+										+ (session.domain() != null ? " domain=" + session.domain()
+												+ ";" : "") + " path=/";
+
+				wrote((cookie + EOL).getBytes());
+
+				reply.event().session().set(true);
+
+				if (Event.LOG) {
+					if (reply.event().daemon().verbose) {
+						reply.event().log("cookie " + cookie, Event.VERBOSE);
+					}
 				}
 			}
-		}
 
-		if (reply.event().close()) {
-			wrote(close);
-		} else {
-			wrote(alive);
-		}
+			if (reply.event().close()) {
+				wrote(close);
+			} else {
+				wrote(alive);
+			}
 
-		HashMap headers = reply.headers();
+			HashMap headers = reply.headers();
 
-		if (headers != null) {
-			Iterator it = headers.keySet().iterator();
+			if (headers != null) {
+				Iterator it = headers.keySet().iterator();
 
-			while (it.hasNext()) {
-				String name = (String) it.next();
-				String value = (String) reply.headers().get(name);
+				while (it.hasNext()) {
+					String name = (String) it.next();
+					String value = (String) reply.headers().get(name);
 
-				wrote((name + ": " + value + EOL).getBytes());
+					wrote((name + ": " + value + EOL).getBytes());
+				}
 			}
 		}
 
@@ -213,11 +216,11 @@ public abstract class Output extends OutputStream implements Event.Block {
 
 	protected void wrote(byte[] b, int off, int len) throws IOException {
 		int remaining = 0;
-		
+
 		try {
 			ByteBuffer out = reply.event().worker().out();
 			remaining = out.remaining();
-	
+
 			while (len > remaining) {
 				out.put(b, off, remaining);
 
@@ -328,10 +331,10 @@ public abstract class Output extends OutputStream implements Event.Block {
 
 	protected boolean zero() {
 		return reply.code().startsWith("302")
-		|| reply.code().startsWith("304")
-		|| reply.code().startsWith("505");
+				|| reply.code().startsWith("304")
+				|| reply.code().startsWith("505");
 	}
-	
+
 	static class Chunked extends Output {
 		public static int OFFSET = 6;
 		private int cursor = OFFSET, count = 0;

@@ -89,35 +89,40 @@ public class Query extends Hash {
 			}
 		}
 
-		String encoding = header("transfer-encoding");
-
-		if (encoding != null && encoding.equalsIgnoreCase("chunked")) {
-			length = -1;
-		} else {
-			String content = header("content-length");
-
-			if(content != null) {
-				length = Long.parseLong(content);
-			}
-			else {
-				length = 0;
-			}
+		if(header("head") != null) {
+			input.event().headless = true;
 		}
+		else {
+			String encoding = header("transfer-encoding");
 
-		String since = header("if-modified-since");
+			if (encoding != null && encoding.equalsIgnoreCase("chunked")) {
+				length = -1;
+			} else {
+				String content = header("content-length");
 
-		if (since != null && since.length() > 0) {
-			try {
-				modified = input.event().worker().date().parse(since).getTime();
-			} catch (ParseException e) {
-				modified = 0;
+				if(content != null) {
+					length = Long.parseLong(content);
+				}
+				else {
+					length = 0;
+				}
 			}
-		}
 
-		String connection = header("connection");
+			String since = header("if-modified-since");
 
-		if (connection != null && connection.equalsIgnoreCase("close")) {
-			input.event().close(true);
+			if (since != null && since.length() > 0) {
+				try {
+					modified = input.event().worker().date().parse(since).getTime();
+				} catch (ParseException e) {
+					modified = 0;
+				}
+			}
+
+			String connection = header("connection");
+
+			if (connection != null && connection.equalsIgnoreCase("close")) {
+				input.event().close(true);
+			}
 		}
 
 		clear();
@@ -166,7 +171,7 @@ public class Query extends Hash {
 		if (Event.LOG) {
 			input.event().log("query " + parameters, Event.VERBOSE);
 		}
-		
+
 		if (parameters != null) {
 			StringTokenizer amp = new StringTokenizer(parameters, "&");
 

@@ -229,5 +229,15 @@ VERSION:
       
       - Adds pid.txt if run as app.
       - Added SHA-256 cookie salted hashing of pass for secure deployment.
+    
+    0.5 
+    
+    - Fixed -timeout 0, which didn't work before. Not recommended though since secure deployment uses cookies.
+    
+      For state less high performance use "Head: less" header instead:
+    
+    - Added "Head: less" header, which you only need to supply on first request to each keep-alive socket. This 
+      disables sessions and all reading and writing of headers to accommodate streaming comet protocol.
+    - Added deployment broadcast for PaaS virtual hosting solution.
         
 have fun!
