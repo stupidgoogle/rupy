@@ -215,13 +215,9 @@ public abstract class Output extends OutputStream implements Event.Block {
 	}
 
 	protected void wrote(byte[] b, int off, int len) throws IOException {
-		if(reply.event().worker() == null) {
-			//debug();
+		if(reply.event().worker() == null || Thread.currentThread().getId() != reply.event().worker().id()) {
 			return;
 		}
-		
-		if(Thread.currentThread().getId() != reply.event().worker().id())
-			return;
 		
 		int remaining = 0;
 
@@ -293,13 +289,9 @@ public abstract class Output extends OutputStream implements Event.Block {
 	}
 	
 	public void flush() throws IOException {
-		if(reply.event().worker() == null) {
-			//debug();
+		if(reply.event().worker() == null || Thread.currentThread().getId() != reply.event().worker().id()) {
 			return;
 		}
-		
-		if(Thread.currentThread().getId() != reply.event().worker().id())
-			return;
 		
 		if (Event.LOG) {
 			if(reply.event().daemon().debug) {
@@ -380,13 +372,9 @@ public abstract class Output extends OutputStream implements Event.Block {
 		}
 
 		public void write(byte[] b, int off, int len) throws IOException {
-			if(reply.event().worker() == null) {
-				//debug();
+			if(reply.event().worker() == null || Thread.currentThread().getId() != reply.event().worker().id()) {
 				return;
 			}
-			
-			if(Thread.currentThread().getId() != reply.event().worker().id())
-				return;
 			
 			length += len;
 
@@ -427,13 +415,9 @@ public abstract class Output extends OutputStream implements Event.Block {
 		}
 
 		protected void write() throws IOException {
-			if(reply.event().worker() == null) {
-				//debug();
+			if(reply.event().worker() == null || Thread.currentThread().getId() != reply.event().worker().id()) {
 				return;
 			}
-			
-			if(Thread.currentThread().getId() != reply.event().worker().id())
-				return;
 			
 			byte[] chunk = reply.event().worker().chunk();
 			char[] header = Integer.toHexString(count).toCharArray();
@@ -463,13 +447,9 @@ public abstract class Output extends OutputStream implements Event.Block {
 		}
 
 		public void flush() throws IOException {
-			if(reply.event().worker() == null) {
-				//debug();
+			if(reply.event().worker() == null || Thread.currentThread().getId() != reply.event().worker().id()) {
 				return;
 			}
-			
-			if(Thread.currentThread().getId() != reply.event().worker().id())
-				return;
 			
 			if (init) {
 				if (zero()) {
