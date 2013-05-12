@@ -55,7 +55,7 @@ public class Reply {
 
 	protected void done() throws IOException {
 		if (Event.LOG) {
-			event.log("done " + output.push(), Event.DEBUG);
+			event.log("done " + output.push() + " " + Thread.currentThread().getId(), Event.DEBUG);
 		}
 		
 		if(!output.push()) {

@@ -36,7 +36,7 @@ public class Event extends Throwable implements Chain.Link {
 
 	static int READ = 1 << 0;
 	static int WRITE = 1 << 2;
-	
+
 	static int VERBOSE = 1 << 0;
 	static int DEBUG = 1 << 1;
 
@@ -66,7 +66,7 @@ public class Event extends Throwable implements Chain.Link {
 	private String remote;
 	private boolean close;
 	private long touch;
-	
+
 	/*
 	 * Since variable chunk length on HTTP requests implementations
 	 * are sparse I needed a way to remove all of the irrelevant 
@@ -141,7 +141,20 @@ public class Event extends Throwable implements Chain.Link {
 	}
 
 	protected void worker(Worker worker) {
-		this.worker = worker;
+		if(worker == null) {
+			if(this.worker == null) {
+				try {
+					Thread.currentThread().sleep(5);
+				}
+				catch(InterruptedException e) {}
+			}
+			else if(Thread.currentThread().getId() == this.worker.id()) {
+				this.worker = null;
+			}
+		}
+		else {
+			this.worker = worker;
+		}
 
 		try {
 			register(READ);
@@ -166,7 +179,7 @@ public class Event extends Throwable implements Chain.Link {
 			((Exception) o).printStackTrace(daemon.out);
 		} else if (daemon.debug || daemon.verbose && level == Event.VERBOSE)
 			daemon.out.println("["
-					+ (worker == null ? "*" : "" + worker.index()) + "-"
+					+ (worker == null ? "*" : worker.index() + "|" + worker.id() + "|" + Thread.currentThread().getId()) + "-"
 					+ index + "] " + o);
 	}
 
@@ -245,7 +258,7 @@ public class Event extends Throwable implements Chain.Link {
 					if(!service(daemon.chain("null"))) {
 						reply.code("404 Not Found");
 						reply.output().print(
-							"<pre>'" + query.path() + "' was not found.</pre>");
+								"<pre>'" + query.path() + "' was not found.</pre>");
 					}
 				}
 			}
@@ -259,8 +272,8 @@ public class Event extends Throwable implements Chain.Link {
 
 		if (remote == null) {
 			InetSocketAddress address = (InetSocketAddress) channel.socket()
-			.getRemoteSocketAddress();
-			
+					.getRemoteSocketAddress();
+
 			if(address != null)
 				remote = address.getAddress().getHostAddress();
 		}
@@ -290,7 +303,7 @@ public class Event extends Throwable implements Chain.Link {
 			finally {
 				stream.close();
 			}
-			
+
 			if (Event.LOG) {
 				log("content " + type, VERBOSE);
 			}
@@ -304,7 +317,7 @@ public class Event extends Throwable implements Chain.Link {
 	protected boolean service(Chain chain) throws IOException {
 		if(chain == null)
 			return false;
-		
+
 		try {
 			chain.filter(this);
 		} catch (Failure f) {
@@ -382,6 +395,12 @@ public class Event extends Throwable implements Chain.Link {
 
 		while (System.currentTimeMillis() < max) {			
 			register();
+
+				//register(READ);
+				//key.selector().wakeup();
+				//register(WRITE);
+				//key.selector().wakeup();
+			
 			int available = block.fill(true);
 
 			if (available > 0) {
@@ -397,10 +416,12 @@ public class Event extends Throwable implements Chain.Link {
 			Thread.yield();
 			worker.snooze(10);
 			key.selector().wakeup();
+			
+			//System.err.print(".");
 		}
 
 		String agent = query.header("user-agent");
-		
+
 		throw new Exception("IO timeout. (" + daemon.delay + (agent == null ? "" : ", " + agent) + ")");
 	}
 
@@ -495,16 +516,16 @@ public class Event extends Throwable implements Chain.Link {
 				do {
 					key = random(daemon.cookie);
 				} while (daemon.session().get(key) != null);
-				
+
 				session.key(key);
 			}
 
 			//synchronized (daemon.session()) {
-				if (Event.LOG) {
-					log("new key " + session.key(), VERBOSE);
-				}
+			if (Event.LOG) {
+				log("new key " + session.key(), VERBOSE);
+			}
 
-				daemon.session().put(session.key(), session);
+			daemon.session().put(session.key(), session);
 			//}
 		}
 
@@ -607,7 +628,7 @@ public class Event extends Throwable implements Chain.Link {
 			return fail;
 		}
 	}
-	
+
 	public String toString() {
 		return "event: " + index + Output.EOL + 
 				"interest: " + interest + Output.EOL + 

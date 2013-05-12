@@ -22,7 +22,7 @@ public class Worker implements Runnable, Chain.Link {
 	private Thread thread;
 	private Event event;
 	private int index, lock;
-	private boolean awake, alive;
+	private boolean awake, alive, exit = false;
 	private long touch;
 	private DateFormat date;
 
@@ -104,9 +104,19 @@ public class Worker implements Runnable, Chain.Link {
 						return;
 					}
 
-					thread.wait(delay);
+					//if(event == null) {
+						thread.wait(delay);
+					//}
+					//else {
+					//	System.err.println("wtf1 " + event.index());
+					//}	
 				} else {
-					thread.wait();
+					if(event == null) {
+						thread.wait();
+					}
+					//else {
+					//	System.err.println("wtf2 " + event.index());
+					//}
 				}
 			} catch (InterruptedException e) {
 				event.disconnect(e);
@@ -128,18 +138,43 @@ public class Worker implements Runnable, Chain.Link {
 		return lock;
 	}
 
+	static protected String stack(Thread thread) {
+		StackTraceElement[] stack = thread.getStackTrace();
+		StringBuilder builder = new StringBuilder();
+		
+		for(int i = 0; i < stack.length; i++) {
+			builder.append(stack[i]);
+			
+			if(i < stack.length - 1) {
+				builder.append("\r\n");
+			}
+		}
+		
+		return builder.toString();
+	}
+	
 	protected boolean busy() {
 		if(event != null && touch > 0) {
 			lock = (int) (System.currentTimeMillis() - touch);
 
+			//if(lock > 20) {
+			//	System.out.println(lock);
+			//}
+
 			if(lock > daemon.delay) {
 				try {
 					daemon.error.write(event.toString().getBytes());
+					daemon.error.write(stack(thread).getBytes());
 				}
 				catch(IOException e) {}
 				
 				reset(new Exception("Threadlock " + lock + " (" + event.query().path() + ")"));
 
+				if(exit) {
+					System.err.println("Rupy stopped for debugging!");
+					System.exit(-1);
+				}
+				
 				event = null;
 				return false;
 			}
@@ -154,6 +189,10 @@ public class Worker implements Runnable, Chain.Link {
 		return index;
 	}
 
+	protected long id() {
+		return thread.getId();
+	}
+	
 	protected void stop() {
 		synchronized (thread) {
 			thread.notify();
@@ -176,13 +215,19 @@ public class Worker implements Runnable, Chain.Link {
 				}
 			} catch (Exception e) {
 				reset(e);
+				
+				if(exit) {
+					System.err.println("Rupy stopped for debugging!");
+					System.exit(-1);
+				}
 			} finally {
 				if (event != null) {
 					event.worker(null);
 					event = daemon.next(this);
 
 					if (event != null) {
-						event.worker(this);
+						//event.worker(this);
+						Daemon.match(event, this, false);
 					} else {
 						snooze();
 					}
@@ -191,7 +236,8 @@ public class Worker implements Runnable, Chain.Link {
 						event = daemon.next(this);
 
 						if (event != null) {
-							event.worker(this);
+							//event.worker(this);
+							Daemon.match(event, this, false);
 						} else {
 							snooze();
 						}

@@ -189,7 +189,7 @@ public class Daemon implements Runnable {
 		queue = new Chain();
 
 		try {
-			out = new PrintStream(System.out, true, "UTF-8");
+			out = new PrintStream(System.err, true, "UTF-8");
 
 			if(properties.getProperty("log") != null || properties.getProperty("test", "false").toLowerCase().equals(
 					"true")) {
@@ -297,17 +297,24 @@ public class Daemon implements Runnable {
 					"5"));
 
 			for (int i = 0; i < threads; i++) {
-				workers.add(new Worker(this, i));
+				Worker worker = new Worker(this, i);
+				workers.add(worker);
+				
+				//System.err.println(worker.index() + "|" + worker.id());
 			}
 
 			alive = true;
 
-			new Thread(this).start();
+			Thread thread = new Thread(this);
+			id = thread.getId();
+			thread.start();
 		} catch (Exception e) {
 			e.printStackTrace(out);
 		}
 	}
 
+	static long id;
+	
 	/**
 	 * Stops the selector, heartbeat and worker threads.
 	 */
@@ -692,21 +699,6 @@ public class Daemon implements Runnable {
 		return null;
 	}
 
-	protected synchronized Event next(Worker worker) {
-		synchronized (this.queue) {
-			if (queue.size() > 0) {
-				if (Event.LOG) {
-					if (debug)
-						out.println("worker " + worker.index()
-								+ " found work " + queue);
-				}
-
-				return (Event) queue.remove(0);
-			}
-		}
-		return null;
-	}
-
 	public void run() {
 		String pass = properties.getProperty("pass", "");
 		ServerSocketChannel server = null;
@@ -797,7 +789,7 @@ public class Daemon implements Runnable {
 						it = events.values().iterator();
 						while(it.hasNext()) {
 							Event e = (Event) it.next();
-							event.output().println(" event: {index: " + e + ", last: " + (System.currentTimeMillis() - e.last()) + "}");
+							event.output().println(" event: {index: " + e.index() + ", last: " + (System.currentTimeMillis() - e.last()) + "}");
 						}
 						event.output().println("}</pre>");
 					}
@@ -909,6 +901,28 @@ public class Daemon implements Runnable {
 		}
 	}
 
+	protected synchronized Event next(Worker worker) {
+		//synchronized (worker) {
+			if (queue.size() > 0) {
+				Event event = (Event) queue.remove(0);
+				
+				if(event.worker() != null) {
+					return null;
+				}
+				
+				if (Event.LOG) {
+					if (debug)
+						out.println("worker " + worker.index()
+								+ " found work " + event.index()
+								+ ". (" + queue.size() + ")");
+				}
+
+				return event;
+			}
+		//}
+		return null;
+	}
+	
 	protected synchronized void employ(Event event) {
 		/*
 		if(queue.size() > 0) {
@@ -916,6 +930,7 @@ public class Daemon implements Runnable {
 			return;
 		}
 		 */
+		
 		workers.reset();
 		Worker worker = (Worker) workers.next();
 
@@ -935,14 +950,37 @@ public class Daemon implements Runnable {
 
 		if (Event.LOG) {
 			if (debug)
-				out.println("worker " + worker.index() + " hired. (" + queue.size() + ")");
+				out.println("event " + event.index()
+						+ " hired worker " + worker.index()
+						+ ". (" + queue.size() + ")");
 		}
 
-		event.worker(worker);
-		worker.event(event);
-		worker.wakeup();
+		//if(event.worker() != null) {
+		//	return;
+		//}
+		
+		//synchronized(worker) {
+		//worker.event(event);
+		//event.worker(worker);
+		//worker.wakeup();
+		//}
+		
+		match(event, worker, true);
 	}
 
+	protected static synchronized void match(Event event, Worker worker, boolean wakeup) {
+		if(event.worker() != null) {
+			return;
+		}
+		
+		event.worker(worker);
+		
+		if(wakeup) {
+			worker.event(event);
+			worker.wakeup();
+		}
+	}
+	
 	class Filter implements FilenameFilter {
 		public boolean accept(File dir, String name) {
 			if (name.endsWith(".jar")) {

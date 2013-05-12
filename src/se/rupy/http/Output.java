@@ -215,6 +215,14 @@ public abstract class Output extends OutputStream implements Event.Block {
 	}
 
 	protected void wrote(byte[] b, int off, int len) throws IOException {
+		if(reply.event().worker() == null) {
+			//debug();
+			return;
+		}
+		
+		if(Thread.currentThread().getId() != reply.event().worker().id())
+			return;
+		
 		int remaining = 0;
 
 		try {
@@ -277,17 +285,32 @@ public abstract class Output extends OutputStream implements Event.Block {
 		out.clear();
 	}
 
+	void debug() throws Failure {
+		System.err.println("/*\r\n * event " + reply.event().index() + " " + Thread.currentThread().getId() + "\r\n */");
+		System.err.println(Worker.stack(Thread.currentThread()));
+		
+		//throw new Failure("Synchronization Issue.");
+	}
+	
 	public void flush() throws IOException {
+		if(reply.event().worker() == null) {
+			//debug();
+			return;
+		}
+		
+		if(Thread.currentThread().getId() != reply.event().worker().id())
+			return;
+		
 		if (Event.LOG) {
 			if(reply.event().daemon().debug) {
 				reply.event().log("flush " + length, Event.DEBUG);
 			}
 		}
-
+		
 		try {
 			internal(true);
 		} catch (Exception e) {
-			throw (Failure.Close) new Failure.Close("No flush!").initCause(e); // Connection dropped by peer
+			throw (Failure.Close) new Failure.Close("No flush! (" + reply.event().index() + ")").initCause(e); // Connection dropped by peer
 		}
 	}
 
@@ -357,6 +380,14 @@ public abstract class Output extends OutputStream implements Event.Block {
 		}
 
 		public void write(byte[] b, int off, int len) throws IOException {
+			if(reply.event().worker() == null) {
+				//debug();
+				return;
+			}
+			
+			if(Thread.currentThread().getId() != reply.event().worker().id())
+				return;
+			
 			length += len;
 
 			if (fixed) {
@@ -396,6 +427,14 @@ public abstract class Output extends OutputStream implements Event.Block {
 		}
 
 		protected void write() throws IOException {
+			if(reply.event().worker() == null) {
+				//debug();
+				return;
+			}
+			
+			if(Thread.currentThread().getId() != reply.event().worker().id())
+				return;
+			
 			byte[] chunk = reply.event().worker().chunk();
 			char[] header = Integer.toHexString(count).toCharArray();
 			int length = header.length, start = 4 - length, cursor;
@@ -424,6 +463,14 @@ public abstract class Output extends OutputStream implements Event.Block {
 		}
 
 		public void flush() throws IOException {
+			if(reply.event().worker() == null) {
+				//debug();
+				return;
+			}
+			
+			if(Thread.currentThread().getId() != reply.event().worker().id())
+				return;
+			
 			if (init) {
 				if (zero()) {
 					if (Event.LOG) {
@@ -458,7 +505,7 @@ public abstract class Output extends OutputStream implements Event.Block {
 
 			super.flush();
 		}
-		
+
 		public String toString() {
 			return "    length: " + length + Output.EOL + 
 					"    size: " + size + Output.EOL + 
