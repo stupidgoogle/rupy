@@ -226,9 +226,7 @@ public class Worker implements Runnable, Chain.Link {
 					event = daemon.next(this);
 
 					if (event != null) {
-						//event.worker(this);
 						Daemon.match(event, this, false);
-						//event.poll();
 					} else {
 						snooze();
 					}
@@ -237,9 +235,7 @@ public class Worker implements Runnable, Chain.Link {
 						event = daemon.next(this);
 
 						if (event != null) {
-							//event.worker(this);
 							Daemon.match(event, this, false);
-							//event.poll();
 						} else {
 							snooze();
 						}
@@ -250,13 +246,15 @@ public class Worker implements Runnable, Chain.Link {
 				}
 			}
 
+			/*
+			 * Sychronization when huge amounts of Reply.wakeup() are being hammered.
+			 */
 			if(event != null) {
 				Worker worker = event.worker();
 
 				if(worker == null)
 					event = null;
 				else if(worker.id() != Thread.currentThread().getId()) {
-					System.out.println(worker.id() + " " + Thread.currentThread().getId());
 					event.worker(null);
 					event = null;
 				}
