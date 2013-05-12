@@ -215,7 +215,9 @@ public abstract class Output extends OutputStream implements Event.Block {
 	}
 
 	protected void wrote(byte[] b, int off, int len) throws IOException {
-		if(reply.event().worker() == null || Thread.currentThread().getId() != reply.event().worker().id()) {
+		Worker worker = reply.event().worker();
+		
+		if(worker == null || Thread.currentThread().getId() != worker.id()) {
 			return;
 		}
 		
@@ -289,7 +291,9 @@ public abstract class Output extends OutputStream implements Event.Block {
 	}
 	
 	public void flush() throws IOException {
-		if(reply.event().worker() == null || Thread.currentThread().getId() != reply.event().worker().id()) {
+		Worker worker = reply.event().worker();
+		
+		if(worker == null || Thread.currentThread().getId() != worker.id()) {
 			return;
 		}
 		
@@ -372,7 +376,9 @@ public abstract class Output extends OutputStream implements Event.Block {
 		}
 
 		public void write(byte[] b, int off, int len) throws IOException {
-			if(reply.event().worker() == null || Thread.currentThread().getId() != reply.event().worker().id()) {
+			Worker worker = reply.event().worker();
+			
+			if(worker == null || Thread.currentThread().getId() != worker.id()) {
 				return;
 			}
 			
@@ -447,7 +453,9 @@ public abstract class Output extends OutputStream implements Event.Block {
 		}
 
 		public void flush() throws IOException {
-			if(reply.event().worker() == null || Thread.currentThread().getId() != reply.event().worker().id()) {
+			Worker worker = reply.event().worker();
+			
+			if(worker == null || Thread.currentThread().getId() != worker.id()) {
 				return;
 			}
 			

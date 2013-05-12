@@ -142,13 +142,7 @@ public class Event extends Throwable implements Chain.Link {
 
 	protected void worker(Worker worker) {
 		if(worker == null) {
-			if(this.worker == null) {
-				try {
-					Thread.currentThread().sleep(5);
-				}
-				catch(InterruptedException e) {}
-			}
-			else if(Thread.currentThread().getId() == this.worker.id()) {
+			if(this.worker != null && Thread.currentThread().getId() == this.worker.id()) {
 				this.worker = null;
 			}
 		}
