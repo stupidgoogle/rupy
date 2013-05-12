@@ -54,11 +54,11 @@ public class Daemon implements Runnable {
 	 * -pass !@#$ -log -port 80' would enable remote deploy with password '!@#$', run on port 80 (requires 
 	 * root on linux) and turn on logging.
 	 * <table cellpadding="10">
-	 * <tr><td valign="top"><b>pass</b> (secret)
+	 * <tr><td valign="top"><b>pass</b> ()
 	 * </td><td>
 	 *            the pass used to deploy services with {@link Deploy} via HTTP POST, 
-	 *            default is 'secret' and only allows deploys from 127.0.0.1 but that 
-	 *            can be hacked; so change this as soon as possible.
+	 *            default is '' which disables hot-deploy; pass 'secret' only allows 
+	 *            deploys from 127.0.0.1.
 	 * </td></tr>
 	 * <tr><td valign="top"><b>port</b> (8000)
 	 * </td><td>
