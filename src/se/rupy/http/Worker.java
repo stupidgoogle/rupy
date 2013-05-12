@@ -255,7 +255,7 @@ public class Worker implements Runnable, Chain.Link {
 				if(worker == null)
 					event = null;
 				else if(worker.id() != Thread.currentThread().getId()) {
-					try { Thread.currentThread().sleep(10); } catch (InterruptedException e) {}
+					try { Thread.currentThread().sleep(50); } catch (InterruptedException e) {}
 					event.worker(null);
 					event = null;
 				}
