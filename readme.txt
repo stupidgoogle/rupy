@@ -230,7 +230,7 @@ VERSION:
       - Adds pid.txt if run as app.
       - Added SHA-256 cookie salted hashing of pass for secure deployment.
     
-    0.5 
+    0.5 Comet Stream
     
     - Fixed -timeout 0, which didn't work before. Not recommended though since secure deployment uses cookies.
     
