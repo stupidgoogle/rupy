@@ -973,10 +973,10 @@ public class Daemon implements Runnable {
 			return;
 		}
 		
+		worker.event(event);
 		event.worker(worker);
 		
 		if(wakeup) {
-			worker.event(event);
 			worker.wakeup();
 		}
 	}

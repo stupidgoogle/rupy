@@ -215,11 +215,11 @@ public abstract class Output extends OutputStream implements Event.Block {
 	}
 
 	protected void wrote(byte[] b, int off, int len) throws IOException {
-		Worker worker = reply.event().worker();
+		//Worker worker = reply.event().worker();
 		
-		if(worker == null || Thread.currentThread().getId() != worker.id()) {
-			return;
-		}
+		//if(worker == null || Thread.currentThread().getId() != worker.id()) {
+		//	return;
+		//}
 		
 		int remaining = 0;
 
@@ -291,11 +291,11 @@ public abstract class Output extends OutputStream implements Event.Block {
 	}
 	
 	public void flush() throws IOException {
-		Worker worker = reply.event().worker();
+		//Worker worker = reply.event().worker();
 		
-		if(worker == null || Thread.currentThread().getId() != worker.id()) {
-			return;
-		}
+		//if(worker == null || Thread.currentThread().getId() != worker.id()) {
+		//	return;
+		//}
 		
 		if (Event.LOG) {
 			if(reply.event().daemon().debug) {
@@ -376,11 +376,11 @@ public abstract class Output extends OutputStream implements Event.Block {
 		}
 
 		public void write(byte[] b, int off, int len) throws IOException {
-			Worker worker = reply.event().worker();
+			//Worker worker = reply.event().worker();
 			
-			if(worker == null || Thread.currentThread().getId() != worker.id()) {
-				return;
-			}
+			//if(worker == null || Thread.currentThread().getId() != worker.id()) {
+			//	return;
+			//}
 			
 			length += len;
 
@@ -421,9 +421,11 @@ public abstract class Output extends OutputStream implements Event.Block {
 		}
 
 		protected void write() throws IOException {
-			if(reply.event().worker() == null || Thread.currentThread().getId() != reply.event().worker().id()) {
-				return;
-			}
+			//Worker worker = reply.event().worker();
+			
+			//if(worker == null || Thread.currentThread().getId() != worker.id()) {
+			//	return;
+			//}
 			
 			byte[] chunk = reply.event().worker().chunk();
 			char[] header = Integer.toHexString(count).toCharArray();
@@ -453,11 +455,11 @@ public abstract class Output extends OutputStream implements Event.Block {
 		}
 
 		public void flush() throws IOException {
-			Worker worker = reply.event().worker();
+			//Worker worker = reply.event().worker();
 			
-			if(worker == null || Thread.currentThread().getId() != worker.id()) {
-				return;
-			}
+			//if(worker == null || Thread.currentThread().getId() != worker.id()) {
+			//	return;
+			//}
 			
 			if (init) {
 				if (zero()) {

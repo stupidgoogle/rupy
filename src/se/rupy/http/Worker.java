@@ -34,7 +34,7 @@ public class Worker implements Runnable, Chain.Link {
 		out = ByteBuffer.allocateDirect(daemon.size);
 
 		chunk = new byte[daemon.size + Output.Chunked.OFFSET + 2];
-		
+
 		date = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US);
 		date.setTimeZone(TimeZone.getTimeZone("GMT"));
 
@@ -105,7 +105,7 @@ public class Worker implements Runnable, Chain.Link {
 					}
 
 					//if(event == null) {
-						thread.wait(delay);
+					thread.wait(delay);
 					//}
 					//else {
 					//	System.err.println("wtf1 " + event.index());
@@ -141,18 +141,18 @@ public class Worker implements Runnable, Chain.Link {
 	static protected String stack(Thread thread) {
 		StackTraceElement[] stack = thread.getStackTrace();
 		StringBuilder builder = new StringBuilder();
-		
+
 		for(int i = 0; i < stack.length; i++) {
 			builder.append(stack[i]);
-			
+
 			if(i < stack.length - 1) {
 				builder.append("\r\n");
 			}
 		}
-		
+
 		return builder.toString();
 	}
-	
+
 	protected boolean busy() {
 		if(event != null && touch > 0) {
 			lock = (int) (System.currentTimeMillis() - touch);
@@ -167,14 +167,14 @@ public class Worker implements Runnable, Chain.Link {
 					daemon.error.write(stack(thread).getBytes());
 				}
 				catch(IOException e) {}
-				
+
 				reset(new Exception("Threadlock " + lock + " (" + event.query().path() + ")"));
 
 				if(exit) {
 					System.err.println("Rupy stopped for debugging!");
 					System.exit(-1);
 				}
-				
+
 				event = null;
 				return false;
 			}
@@ -192,7 +192,7 @@ public class Worker implements Runnable, Chain.Link {
 	protected long id() {
 		return thread.getId();
 	}
-	
+
 	protected void stop() {
 		synchronized (thread) {
 			thread.notify();
@@ -215,7 +215,7 @@ public class Worker implements Runnable, Chain.Link {
 				}
 			} catch (Exception e) {
 				reset(e);
-				
+
 				if(exit) {
 					System.err.println("Rupy stopped for debugging!");
 					System.exit(-1);
@@ -228,6 +228,7 @@ public class Worker implements Runnable, Chain.Link {
 					if (event != null) {
 						//event.worker(this);
 						Daemon.match(event, this, false);
+						//event.poll();
 					} else {
 						snooze();
 					}
@@ -238,6 +239,7 @@ public class Worker implements Runnable, Chain.Link {
 						if (event != null) {
 							//event.worker(this);
 							Daemon.match(event, this, false);
+							//event.poll();
 						} else {
 							snooze();
 						}
@@ -245,6 +247,18 @@ public class Worker implements Runnable, Chain.Link {
 					else {
 						snooze();
 					}
+				}
+			}
+
+			if(event != null) {
+				Worker worker = event.worker();
+
+				if(worker == null)
+					event = null;
+				else if(worker.id() != Thread.currentThread().getId()) {
+					System.out.println(worker.id() + " " + Thread.currentThread().getId());
+					event.worker(null);
+					event = null;
 				}
 			}
 		}
@@ -258,7 +272,7 @@ public class Worker implements Runnable, Chain.Link {
 		out.clear();
 		in.clear();
 	}
-	
+
 	public String toString() {
 		return "worker: " + index + Output.EOL + 
 				"in: " + in + Output.EOL + 
