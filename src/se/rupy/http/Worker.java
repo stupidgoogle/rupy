@@ -247,7 +247,7 @@ public class Worker implements Runnable, Chain.Link {
 			}
 
 			/*
-			 * Sychronization when huge amounts of Reply.wakeup() are being hammered.
+			 * Synchronization when huge amounts of Reply.wakeup() are being hammered.
 			 */
 			if(event != null) {
 				Worker worker = event.worker();
