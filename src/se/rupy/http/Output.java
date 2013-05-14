@@ -155,9 +155,6 @@ public abstract class Output extends OutputStream implements Event.Block {
 			if (fixed && reply.event().daemon().properties.getProperty("live") != null) {
 				wrote(("Cache-Control: max-age=" + reply.event().daemon().cache + EOL)
 						.getBytes());
-				//wrote(("Expires: "
-				//		+ reply.event().worker().date().format(new Date(System.currentTimeMillis() + ((long) 1000 * 60 * 60 * 24 * 365))) + EOL)
-				//		.getBytes());
 			}
 
 			if (reply.event().session() != null && !reply.event().session().set()) {
@@ -215,12 +212,6 @@ public abstract class Output extends OutputStream implements Event.Block {
 	}
 
 	protected void wrote(byte[] b, int off, int len) throws IOException {
-		//Worker worker = reply.event().worker();
-		
-		//if(worker == null || Thread.currentThread().getId() != worker.id()) {
-		//	return;
-		//}
-		
 		int remaining = 0;
 
 		try {
@@ -282,21 +273,8 @@ public abstract class Output extends OutputStream implements Event.Block {
 
 		out.clear();
 	}
-
-	void debug() throws Failure {
-		System.err.println("/*\r\n * event " + reply.event().index() + " " + Thread.currentThread().getId() + "\r\n */");
-		System.err.println(Worker.stack(Thread.currentThread()));
-		
-		//throw new Failure("Synchronization Issue.");
-	}
 	
 	public void flush() throws IOException {
-		//Worker worker = reply.event().worker();
-		
-		//if(worker == null || Thread.currentThread().getId() != worker.id()) {
-		//	return;
-		//}
-		
 		if (Event.LOG) {
 			if(reply.event().daemon().debug) {
 				reply.event().log("flush " + length, Event.DEBUG);
@@ -376,12 +354,6 @@ public abstract class Output extends OutputStream implements Event.Block {
 		}
 
 		public void write(byte[] b, int off, int len) throws IOException {
-			//Worker worker = reply.event().worker();
-			
-			//if(worker == null) { // || Thread.currentThread().getId() != worker.id()) {
-			//	return;
-			//}
-			
 			length += len;
 
 			if (fixed) {
@@ -421,12 +393,6 @@ public abstract class Output extends OutputStream implements Event.Block {
 		}
 
 		protected void write() throws IOException {
-			//Worker worker = reply.event().worker();
-			
-			//if(worker == null || Thread.currentThread().getId() != worker.id()) {
-			//	return;
-			//}
-			
 			byte[] chunk = reply.event().worker().chunk();
 			char[] header = Integer.toHexString(count).toCharArray();
 			int length = header.length, start = 4 - length, cursor;
@@ -455,12 +421,6 @@ public abstract class Output extends OutputStream implements Event.Block {
 		}
 
 		public void flush() throws IOException {
-			//Worker worker = reply.event().worker();
-			
-			//if(worker == null) { // || Thread.currentThread().getId() != worker.id()) {
-			//	return;
-			//}
-			
 			if (init) {
 				if (zero()) {
 					if (Event.LOG) {

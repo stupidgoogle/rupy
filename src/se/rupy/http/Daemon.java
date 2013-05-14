@@ -852,7 +852,7 @@ public class Daemon implements Runnable {
 							if (key.isReadable() && event.push()) {
 								event.disconnect(null);
 							} else if (worker == null) {
-								match(event, null, true);
+								match(event, null);
 							} else {
 								worker.wakeup();
 							}
@@ -903,14 +903,17 @@ public class Daemon implements Runnable {
 		}
 	}
 
-	private Event next(Worker worker) {
+	private Event next() {
 		if (queue.size() > 0) {
 			Event event = (Event) queue.remove(0);
 
+			while(queue.size() > 0 && event.worker() != null) {
+				event = (Event) queue.remove(0);
+			}
+			
 			if (Event.LOG) {
 				if (debug)
-					out.println("worker " + worker.index()
-							+ " found work " + event.index()
+					out.println("found work " + event.index()
 							+ ". (" + queue.size() + ")");
 			}
 
@@ -948,10 +951,10 @@ public class Daemon implements Runnable {
 		return worker;
 	}
 	
-	protected synchronized boolean match(Event event, Worker worker, boolean wakeup) {
-		try { Thread.sleep(0, 100); } catch (InterruptedException e) {}
+	protected synchronized boolean match(Event event, Worker worker) {
+		boolean wakeup = true;
 		
-		if(!wakeup) {
+		if(event != null && worker != null) {
 			event.worker(null);
 			worker.event(null);
 
@@ -961,10 +964,14 @@ public class Daemon implements Runnable {
 			catch(CancelledKeyException e) {
 				event.disconnect(e);
 			}
-
+			
+			wakeup = false;
 			event = null;
 		}
-
+		else if(event.worker() != null) {
+			return false;
+		}
+		
 		if(worker == null) {
 			worker = employ(event);
 
@@ -973,13 +980,16 @@ public class Daemon implements Runnable {
 			}
 		}
 		else if(event == null) {
-			event = next(worker);
+			event = next();
 
 			if(event == null) {
 				return false;
 			}
+			else if(event.worker() != null) {
+				return event.worker() == worker;
+			}
 		}
-
+		
 		worker.event(event);
 		event.worker(worker);
 

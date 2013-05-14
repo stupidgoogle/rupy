@@ -201,15 +201,8 @@ public class Reply {
 			return CLOSED;
 		}
 		
-		event.daemon().match(event, null, true);
-		/*
-		try {
-			event.register(Event.WRITE);
-		}
-		catch(CancelledKeyException e) {
-			event.disconnect(e);
-		}
-		*/
+		event.daemon().match(event, null);
+
 		return OK;
 	}
 	
