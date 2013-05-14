@@ -87,52 +87,12 @@ public class Deploy extends Service {
 			if(size != null && size.length() > 0 && Integer.parseInt(size) > 1048576) {
 				throw new Exception("Maximum deployable size is 1MB. To deploy resources use .zip extension, total limit is 10MB!");
 			}
-
-			String message = "{\"type\": \"auth\", \"file\": \"" + name + "\", \"pass\": \"" + pass + "\", \"cookie\": \"" + cookie + "\"}";
-			String auth = (String) event.daemon().send(message);
-
-			if(auth.equals(message)) {
-				Properties properties = new Properties();
-				properties.load(new FileInputStream(new File("passport")));
-				String port = properties.getProperty(name.substring(0, name.lastIndexOf('.')));
-
-				port = hash(port);
-				port = hash(port + cookie);
-				
-				if(event.session() != null)
-					event.session().put("cookie", cookie);
-				
-				if (port == null || !port.equals(pass)) {
-					throw new Exception("Pass verification failed. (" + name + ")");
-				}
-			}
-			else {
-				if(!auth.equals("OK")) {
-					throw new Exception("Pass verification failed. (" + name + ")");
-				}
-			}
 		}
-		else {
-			String port = Deploy.pass;
-			
-			port = hash(port);
-			port = hash(port + cookie);
-			
-			if(event.session() != null)
-				event.session().put("cookie", cookie);
-			
-			if (!port.equals(pass)) {
-				//System.out.println(cookie);
-				throw new Failure("Pass verification failed. (" + pass + ")");
-			}
-			
-			if(Deploy.pass.equals("secret") && !event.remote().equals("127.0.0.1")) {
-				throw new Failure("Default pass 'secret' can only deploy from 127.0.0.1. (" + event.remote() + ")");
-			}
-			
-			cookie = null;
-		}
-
+		
+		/*
+		 * Write file first, so we can hash it.
+		 */
+		
 		File file = new File(path + name);
 		OutputStream out = new FileOutputStream(file);
 		InputStream in = event.query().input();
@@ -152,6 +112,55 @@ public class Deploy extends Service {
 
 		out.flush();
 		out.close();
+		
+		/*
+		 * Authenticate
+		 */
+		
+		if (Deploy.pass == null) {
+			String message = "{\"type\": \"auth\", \"file\": \"" + name + "\", \"pass\": \"" + pass + "\", \"cookie\": \"" + cookie + "\"}";
+			String auth = (String) event.daemon().send(message);
+
+			if(auth.equals(message)) {
+				Properties properties = new Properties();
+				properties.load(new FileInputStream(new File("passport")));
+				String port = properties.getProperty(name.substring(0, name.lastIndexOf('.')));
+
+				port = hash(file, port, cookie);
+				
+				if(event.session() != null)
+					event.session().put("cookie", cookie);
+				
+				if (port == null || !port.equals(pass)) {
+					file.delete();
+					throw new Exception("Pass verification failed. (" + name + ")");
+				}
+			}
+			else {
+				if(!auth.equals("OK")) {
+					file.delete();
+					throw new Exception("Pass verification failed. (" + name + ")");
+				}
+			}
+		}
+		else {
+			String port = hash(file, pass, cookie);
+			
+			if(event.session() != null)
+				event.session().put("cookie", cookie);
+			
+			if (!port.equals(pass)) {
+				file.delete();
+				throw new Failure("Pass verification failed. (" + pass + ")");
+			}
+			
+			if(Deploy.pass.equals("secret") && !event.remote().equals("127.0.0.1")) {
+				file.delete();
+				throw new Failure("Default pass 'secret' can only deploy from 127.0.0.1. (" + event.remote() + ")");
+			}
+			
+			cookie = null;
+		}
 		
 		/*
 		 * Deploy LOCAL
@@ -662,13 +671,27 @@ public class Deploy extends Service {
 		deploy(host, file, pass, true);
 	}
 	
+	/**
+	 * The hash chain: file -> pass -> cookie = the man in the 
+	 * middle can read your deployment file but he cannot alter, 
+	 * deploy or re-deploy it!<br>
+	 * <br>
+	 * Basically: don't put passwords in clear text in the deployment 
+	 * jar and you will be fine!
+	 */
+	public static String hash(File file, String pass, String cookie) throws NoSuchAlgorithmException, FileNotFoundException, IOException {
+		String hash = hash(file);
+		hash = hash(hash + pass);
+		hash = hash(hash + cookie);
+		
+		return hash;
+	}
+	
 	private static void deploy(String host, File file, String pass, boolean cluster) throws IOException, NoSuchAlgorithmException {
 		URL url = new URL("http://" + host + "/deploy");
 		Client client = new Client();
 		String cookie = client.cookie(url);
-		String port = hash(pass);
-		port = hash(port + cookie);
-		InputStream in = client.send(url, file, port, cluster, true);
+		InputStream in = client.send(url, file, hash(file, pass, cookie), cluster, true);
 		System.out.println(new SimpleDateFormat("H:mm").format(new Date()));
 		Client.toStream(in, System.out);
 		
@@ -680,6 +703,20 @@ public class Deploy extends Service {
 		MessageDigest md = MessageDigest.getInstance("SHA-256");
 		md.update(pass.getBytes(), 0, pass.length());
 		return new BigInteger(1, md.digest()).toString(16);
+	}
+	
+	private static String hash(File file) throws NoSuchAlgorithmException, FileNotFoundException, IOException {
+	    MessageDigest md = MessageDigest.getInstance("SHA-256");
+	    InputStream fis = new FileInputStream(file);
+	    int n = 0;
+	    byte[] buffer = new byte[8192];
+	    while (n != -1) {
+	        n = fis.read(buffer);
+	        if (n > 0) {
+	            md.update(buffer, 0, n);
+	        }
+	    }
+	    return new BigInteger(1, md.digest()).toString(16);
 	}
 	
 	public static void main(String[] args) {

@@ -2,6 +2,7 @@ package se.rupy.http;
 
 import java.io.*;
 import java.nio.*;
+import java.nio.channels.CancelledKeyException;
 import java.util.*;
 
 /**
@@ -187,7 +188,7 @@ public class Reply {
 	 * 
 	 * @return The status of the wakeup call. {@link Reply#OK}, {@link Reply#COMPLETE}, {@link Reply#CLOSED} or {@link Reply#WORKING}
 	 */
-	public int wakeup() {
+	public synchronized int wakeup() {
 		if (event.worker() != null) {
 			return WORKING;
 		}
@@ -200,9 +201,15 @@ public class Reply {
 			return CLOSED;
 		}
 		
-		//event.push(true);
-		event.daemon().employ(event);
-		
+		event.daemon().match(event, null, true);
+		/*
+		try {
+			event.register(Event.WRITE);
+		}
+		catch(CancelledKeyException e) {
+			event.disconnect(e);
+		}
+		*/
 		return OK;
 	}
 	

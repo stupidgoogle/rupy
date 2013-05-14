@@ -78,11 +78,6 @@ public class Worker implements Runnable, Chain.Link {
 	}
 
 	protected void touch() {
-		/*
-		if(event.daemon().debug) {
-			event.log("touch " + (System.currentTimeMillis() - touch), Event.DEBUG);
-		}
-		 */
 		touch = System.currentTimeMillis();
 	}
 
@@ -104,19 +99,11 @@ public class Worker implements Runnable, Chain.Link {
 						return;
 					}
 
-					//if(event == null) {
 					thread.wait(delay);
-					//}
-					//else {
-					//	System.err.println("wtf1 " + event.index());
-					//}	
 				} else {
 					if(event == null) {
 						thread.wait();
 					}
-					//else {
-					//	System.err.println("wtf2 " + event.index());
-					//}
 				}
 			} catch (InterruptedException e) {
 				event.disconnect(e);
@@ -157,17 +144,12 @@ public class Worker implements Runnable, Chain.Link {
 		if(event != null && touch > 0) {
 			lock = (int) (System.currentTimeMillis() - touch);
 
-			//if(lock > 20) {
-			//	System.out.println(lock);
-			//}
-
 			if(lock > daemon.delay) {
 				try {
-					daemon.error.write(event.toString().getBytes());
 					daemon.error.write(stack(thread).getBytes());
 				}
-				catch(IOException e) {}
-
+				catch (IOException e) {}
+				
 				reset(new Exception("Threadlock " + lock + " (" + event.query().path() + ")"));
 
 				if(exit) {
@@ -222,42 +204,12 @@ public class Worker implements Runnable, Chain.Link {
 				}
 			} finally {
 				if (event != null) {
-					event.worker(null);
-					event = daemon.next(this);
-
-					if (event != null) {
-						Daemon.match(event, this, false);
-					} else {
-						snooze();
-					}
-				} else {
-					if(daemon.queue.size() > 0) {
-						event = daemon.next(this);
-
-						if (event != null) {
-							Daemon.match(event, this, false);
-						} else {
-							snooze();
-						}
-					}
-					else {
+					if (!daemon.match(event, this, false)) {
 						snooze();
 					}
 				}
-			}
-
-			/*
-			 * Synchronization when huge amounts of Reply.wakeup() are being hammered.
-			 */
-			if(event != null) {
-				Worker worker = event.worker();
-
-				if(worker == null)
-					event = null;
-				else if(worker.id() != Thread.currentThread().getId()) {
-					try { Thread.currentThread().sleep(50); } catch (InterruptedException e) {}
-					event.worker(null);
-					event = null;
+				else {
+					snooze();
 				}
 			}
 		}

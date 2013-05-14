@@ -218,6 +218,8 @@ public class Daemon implements Runnable {
 	}
 
 	protected void error(Event event, Throwable t) throws IOException {
+		//t.printStackTrace();
+
 		if (error != null && t != null && !(t instanceof Failure.Close)) {
 			Calendar date = Calendar.getInstance();
 			StringBuilder b = new StringBuilder();
@@ -299,7 +301,7 @@ public class Daemon implements Runnable {
 			for (int i = 0; i < threads; i++) {
 				Worker worker = new Worker(this, i);
 				workers.add(worker);
-				
+
 				//System.err.println(worker.index() + "|" + worker.id());
 			}
 
@@ -314,7 +316,7 @@ public class Daemon implements Runnable {
 	}
 
 	static long id;
-	
+
 	/**
 	 * Stops the selector, heartbeat and worker threads.
 	 */
@@ -715,30 +717,30 @@ public class Daemon implements Runnable {
 
 			if (verbose) {
 				boolean live = properties.getProperty("live", "false").toLowerCase().equals("true");
-				
+
 				out.println("daemon started\n" + "- pass       \t"
-					+ pass + "\n" + "- port       \t" + port + "\n"
-					+ "- worker(s)  \t" + threads + " thread"
-					+ (threads > 1 ? "s" : "") + "\n" + 
-					"- session    \t" + cookie + " characters\n" + 
-					"- timeout    \t"
-					+ decimal.format((double) timeout / 60000) + " minute"
-					+ (timeout / 60000 > 1 ? "s" : "") + "\n"
-					+ "- IO timeout \t" + delay + " ms." + "\n"
-					+ "- IO buffer  \t" + size + " bytes\n"
-					+ "- debug      \t" + debug + "\n"
-					+ "- live       \t" + live
-				);
-				
+						+ pass + "\n" + "- port       \t" + port + "\n"
+						+ "- worker(s)  \t" + threads + " thread"
+						+ (threads > 1 ? "s" : "") + "\n" + 
+						"- session    \t" + cookie + " characters\n" + 
+						"- timeout    \t"
+						+ decimal.format((double) timeout / 60000) + " minute"
+						+ (timeout / 60000 > 1 ? "s" : "") + "\n"
+						+ "- IO timeout \t" + delay + " ms." + "\n"
+						+ "- IO buffer  \t" + size + " bytes\n"
+						+ "- debug      \t" + debug + "\n"
+						+ "- live       \t" + live
+						);
+
 				if(live)
 					out.println("- cache      \t" + cache);
 
 				out.println("- host       \t" + host);
-				
+
 				if(host)
 					out.println("- domain     \t" + domain);
 			}			
-			
+
 			if (pass != null && pass.length() > 0 || host) {
 				if(host) {
 					add(new Deploy("app" + File.separator));
@@ -789,7 +791,7 @@ public class Daemon implements Runnable {
 						it = events.values().iterator();
 						while(it.hasNext()) {
 							Event e = (Event) it.next();
-							event.output().println(" event: {index: " + e.index() + ", last: " + (System.currentTimeMillis() - e.last()) + "}");
+							event.output().println(" event: {index: " + e.index() + ", push: " + e.push() + ", worker: " + (e.worker() == null ? "null" : "" + e.worker().index()) + ", last: " + (System.currentTimeMillis() - e.last()) + "}");
 						}
 						event.output().println("}</pre>");
 					}
@@ -846,11 +848,11 @@ public class Daemon implements Runnable {
 										event.log("write ---");
 								}
 							}
-
+							
 							if (key.isReadable() && event.push()) {
 								event.disconnect(null);
 							} else if (worker == null) {
-								employ(event);
+								match(event, null, true);
 							} else {
 								worker.wakeup();
 							}
@@ -901,42 +903,30 @@ public class Daemon implements Runnable {
 		}
 	}
 
-	protected synchronized Event next(Worker worker) {
-		//synchronized (worker) {
-			if (queue.size() > 0) {
-				Event event = (Event) queue.remove(0);
-				
-				if(event.worker() != null) {
-					return null;
-				}
-				
-				if (Event.LOG) {
-					if (debug)
-						out.println("worker " + worker.index()
-								+ " found work " + event.index()
-								+ ". (" + queue.size() + ")");
-				}
+	private Event next(Worker worker) {
+		if (queue.size() > 0) {
+			Event event = (Event) queue.remove(0);
 
-				return event;
+			if (Event.LOG) {
+				if (debug)
+					out.println("worker " + worker.index()
+							+ " found work " + event.index()
+							+ ". (" + queue.size() + ")");
 			}
-		//}
+
+			return event;
+		}
+
 		return null;
 	}
-	
-	protected synchronized void employ(Event event) {
-		/*
-		if(queue.size() > 0) {
-			queue(event);
-			return;
-		}
-		 */
-		
+
+	private Worker employ(Event event) {
 		workers.reset();
 		Worker worker = (Worker) workers.next();
 
 		if (worker == null) {
 			queue(event);
-			return;
+			return null;
 		}
 
 		while (worker.busy()) {
@@ -944,7 +934,7 @@ public class Daemon implements Runnable {
 
 			if (worker == null) {
 				queue(event);
-				return;
+				return null;
 			}
 		}
 
@@ -955,32 +945,51 @@ public class Daemon implements Runnable {
 						+ ". (" + queue.size() + ")");
 		}
 
-		//if(event.worker() != null) {
-		//	return;
-		//}
-		
-		//synchronized(worker) {
-		//worker.event(event);
-		//event.worker(worker);
-		//worker.wakeup();
-		//}
-		
-		match(event, worker, true);
+		return worker;
 	}
-
-	protected static synchronized void match(Event event, Worker worker, boolean wakeup) {
-		if(event.worker() != null) {
-			return;
-		}
+	
+	protected synchronized boolean match(Event event, Worker worker, boolean wakeup) {
+		try { Thread.sleep(0, 100); } catch (InterruptedException e) {}
 		
+		if(!wakeup) {
+			event.worker(null);
+			worker.event(null);
+
+			try {
+				event.register(Event.READ);
+			}
+			catch(CancelledKeyException e) {
+				event.disconnect(e);
+			}
+
+			event = null;
+		}
+
+		if(worker == null) {
+			worker = employ(event);
+
+			if(worker == null) {
+				return false;
+			}
+		}
+		else if(event == null) {
+			event = next(worker);
+
+			if(event == null) {
+				return false;
+			}
+		}
+
 		worker.event(event);
 		event.worker(worker);
-		
+
 		if(wakeup) {
 			worker.wakeup();
 		}
+
+		return true;
 	}
-	
+
 	class Filter implements FilenameFilter {
 		public boolean accept(File dir, String name) {
 			if (name.endsWith(".jar")) {
@@ -1017,17 +1026,17 @@ public class Daemon implements Runnable {
 
 		public void run() {
 			int socket = 300000;
-			
+
 			if(timeout > 0) {
 				socket = timeout;
 			}
-			
+
 			while (alive) {
 				try {
 					Thread.sleep(1000);
 
 					Iterator it = null;
-					
+
 					if(timeout > 0) {
 						it = session.values().iterator();
 

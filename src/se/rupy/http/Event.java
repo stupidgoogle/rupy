@@ -141,21 +141,7 @@ public class Event extends Throwable implements Chain.Link {
 	}
 
 	protected void worker(Worker worker) {
-		//if(worker == null) {
-		//	if(this.worker != null && Thread.currentThread().getId() == this.worker.id()) {
-		//		this.worker = null;
-		//	}
-		//}
-		//else {
-			this.worker = worker;
-		//}
-
-		try {
-			register(READ);
-		}
-		catch(CancelledKeyException e) {
-			disconnect(e);
-		}
+		this.worker = worker;
 	}
 
 	protected SocketChannel channel() {
@@ -390,11 +376,11 @@ public class Event extends Throwable implements Chain.Link {
 		while (System.currentTimeMillis() < max) {			
 			register();
 
-				//register(READ);
-				//key.selector().wakeup();
-				//register(WRITE);
-				//key.selector().wakeup();
-			
+			//register(READ);
+			//key.selector().wakeup();
+			//register(WRITE);
+			//key.selector().wakeup();
+
 			int available = block.fill(true);
 
 			if (available > 0) {
@@ -410,7 +396,7 @@ public class Event extends Throwable implements Chain.Link {
 			Thread.yield();
 			worker.snooze(10);
 			key.selector().wakeup();
-			
+
 			//System.err.print(".");
 		}
 

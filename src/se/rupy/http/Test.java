@@ -12,7 +12,8 @@ class Test implements Runnable {
 		"- Exception handling." + Output.EOL + 
 		"- Worker timeout." + Output.EOL + 
 		"NOTICE: The test receives and sends the bin/http.jar" + Output.EOL + 
-		"which is ~70kb, if you wonder why it takes time." + Output.EOL + 
+		"which is ~70kb, and never test adds 1 second, if you " + Output.EOL + 
+		"wonder why it takes time." + Output.EOL + 
 		"             ---o---";
 
 	final static int[] count = {5, 30, 30, 30 , 1};
@@ -21,7 +22,7 @@ class Test implements Runnable {
 		"chunk", 
 		"fixed", 
 		"error", 
-		"never"
+		"never" // IMPORTANT: This means we can only run the test with 1 thread!
 	};
 
 	final static String original = "bin/http.jar";
