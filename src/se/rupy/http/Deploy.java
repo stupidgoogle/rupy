@@ -124,16 +124,16 @@ public class Deploy extends Service {
 			if(auth.equals(message)) {
 				Properties properties = new Properties();
 				properties.load(new FileInputStream(new File("passport")));
-				String port = properties.getProperty(name.substring(0, name.lastIndexOf('.')));
+				String key = properties.getProperty(name.substring(0, name.lastIndexOf('.')));
 
-				port = hash(file, port, cookie);
+				key = hash(file, key, cookie);
 				
 				if(event.session() != null)
 					event.session().put("cookie", cookie);
 				
-				if (port == null || !port.equals(pass)) {
+				if (key == null || !key.equals(pass)) {
 					file.delete();
-					throw new Exception("Pass verification failed. (" + name + ")");
+					throw new Exception("Pass verification failed. (" + name + "/" + key + ")");
 				}
 			}
 			else {
@@ -144,14 +144,14 @@ public class Deploy extends Service {
 			}
 		}
 		else {
-			String port = hash(file, pass, cookie);
+			String key = hash(file, this.pass, cookie);
 			
 			if(event.session() != null)
 				event.session().put("cookie", cookie);
 			
-			if (!port.equals(pass)) {
+			if (!key.equals(pass)) {
 				file.delete();
-				throw new Failure("Pass verification failed. (" + pass + ")");
+				throw new Failure("Pass verification failed. (" + pass + "/" + key + ")");
 			}
 			
 			if(Deploy.pass.equals("secret") && !event.remote().equals("127.0.0.1")) {
@@ -681,9 +681,11 @@ public class Deploy extends Service {
 	 */
 	public static String hash(File file, String pass, String cookie) throws NoSuchAlgorithmException, FileNotFoundException, IOException {
 		String hash = hash(file);
+		//System.out.println(hash + " " + pass);
 		hash = hash(hash + pass);
+		//System.out.println(hash + " " + cookie);
 		hash = hash(hash + cookie);
-		
+		//System.out.println(hash);
 		return hash;
 	}
 	
@@ -691,7 +693,8 @@ public class Deploy extends Service {
 		URL url = new URL("http://" + host + "/deploy");
 		Client client = new Client();
 		String cookie = client.cookie(url);
-		InputStream in = client.send(url, file, hash(file, pass, cookie), cluster, true);
+		String key = hash(file, pass, cookie);
+		InputStream in = client.send(url, file, key, cluster, true);
 		System.out.println(new SimpleDateFormat("H:mm").format(new Date()));
 		Client.toStream(in, System.out);
 		
@@ -699,19 +702,19 @@ public class Deploy extends Service {
 		//in = client.send(url, file, port, cluster, true);
 	}
 	
-	private static String hash(String pass) throws NoSuchAlgorithmException {
+	private static String hash(String hash) throws NoSuchAlgorithmException {
 		MessageDigest md = MessageDigest.getInstance("SHA-256");
-		md.update(pass.getBytes(), 0, pass.length());
+		md.update(hash.getBytes(), 0, hash.length());
 		return new BigInteger(1, md.digest()).toString(16);
 	}
 	
 	private static String hash(File file) throws NoSuchAlgorithmException, FileNotFoundException, IOException {
 	    MessageDigest md = MessageDigest.getInstance("SHA-256");
-	    InputStream fis = new FileInputStream(file);
+	    InputStream in = new FileInputStream(file);
 	    int n = 0;
 	    byte[] buffer = new byte[8192];
 	    while (n != -1) {
-	        n = fis.read(buffer);
+	        n = in.read(buffer);
 	        if (n > 0) {
 	            md.update(buffer, 0, n);
 	        }
@@ -729,8 +732,8 @@ public class Deploy extends Service {
 						+ args[0] + "?");
 			} catch (NoSuchAlgorithmException nsae) {
 				System.out.println("Could not hash with SHA-256?");
-			} catch (IOException e) {
-				e.printStackTrace();
+			} catch (Exception e) {
+				//e.printStackTrace();
 			}
 		} else {
 			System.out.println("Usage: Deploy [host] [file] [pass]");
