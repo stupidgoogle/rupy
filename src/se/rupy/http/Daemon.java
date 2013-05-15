@@ -246,7 +246,7 @@ public class Daemon implements Runnable {
 	}
 
 	protected String access(Event event) throws IOException {
-		if (access != null && !event.reply().push()) {
+		if (access != null && !event.reply().push() && !event.headless) {
 			Calendar date = Calendar.getInstance();
 			StringBuilder b = new StringBuilder();
 

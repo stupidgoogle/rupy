@@ -286,6 +286,10 @@ VERSION:
       
       See talk-0.9.jar
       
+      Observe that Head: less requests as well as 
+      variable chunk size responses are not logged 
+      to access log for obvious reasons.
+      
     - Added deployment broadcast for PaaS virtual 
       hosting solution.
         
