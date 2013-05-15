@@ -286,7 +286,7 @@ VERSION:
       and all reading and writing of headers to 
       accommodate streaming comet protocol.
       
-      See talk-0.9.jar
+      See talk-0.9.1.jar
       
       Observe that Head: less requests as well as 
       comet responses via Event.hold() are not 
