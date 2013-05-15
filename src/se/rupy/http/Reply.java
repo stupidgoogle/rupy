@@ -189,10 +189,6 @@ public class Reply {
 	 * @return The status of the wakeup call. {@link Reply#OK}, {@link Reply#COMPLETE}, {@link Reply#CLOSED} or {@link Reply#WORKING}
 	 */
 	public synchronized int wakeup() {
-		if (event.worker() != null) {
-			return WORKING;
-		}
-		
 		if (output.complete()) {
 			return COMPLETE;
 		}
@@ -201,9 +197,11 @@ public class Reply {
 			return CLOSED;
 		}
 		
-		event.daemon().match(event, null);
+		if(event.daemon().match(event, null)) {
+			return OK;
+		}
 
-		return OK;
+		return WORKING;
 	}
 	
 	public String toString() {

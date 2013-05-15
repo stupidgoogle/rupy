@@ -892,31 +892,15 @@ public class Daemon implements Runnable {
 		}
 	}
 
-	protected void queue(Event event) {
-		synchronized (this.queue) {
-			queue.add(event);
-		}
-
-		if (Event.LOG) {
-			if (debug)
-				out.println("queue " + queue.size());
-		}
-	}
-
 	private Event next() {
 		if (queue.size() > 0) {
 			Event event = (Event) queue.remove(0);
 
-			while(queue.size() > 0 && event.worker() != null) {
+			while (queue.size() > 0 && event.worker() != null) {
+				//System.err.print(":");
 				event = (Event) queue.remove(0);
 			}
 			
-			if (Event.LOG) {
-				if (debug)
-					out.println("found work " + event.index()
-							+ ". (" + queue.size() + ")");
-			}
-
 			return event;
 		}
 
@@ -928,7 +912,7 @@ public class Daemon implements Runnable {
 		Worker worker = (Worker) workers.next();
 
 		if (worker == null) {
-			queue(event);
+			queue.add(event);
 			return null;
 		}
 
@@ -936,16 +920,9 @@ public class Daemon implements Runnable {
 			worker = (Worker) workers.next();
 
 			if (worker == null) {
-				queue(event);
+				queue.add(event);
 				return null;
 			}
-		}
-
-		if (Event.LOG) {
-			if (debug)
-				out.println("event " + event.index()
-						+ " hired worker " + worker.index()
-						+ ". (" + queue.size() + ")");
 		}
 
 		return worker;
@@ -986,8 +963,16 @@ public class Daemon implements Runnable {
 				return false;
 			}
 			else if(event.worker() != null) {
+				//System.err.print(".");
 				return event.worker() == worker;
 			}
+		}
+		
+		if (Event.LOG) {
+			if (debug)
+				out.println("event " + event.index()
+						+ " and worker " + worker.index()
+						+ " found each other. (" + queue.size() + ")");
 		}
 		
 		worker.event(event);
