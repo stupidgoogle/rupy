@@ -268,14 +268,16 @@ VERSION:
     
     0.5 Comet Stream
     
-    - Improved auth hashing based on deployed 
-      file hash.
+    - Improved pass hashing based on deployed 
+      file hash. The hash chain is now:
+      
+      file -> pass -> cookie
     
     - Fixed -timeout 0, which didn't work before. 
       Not recommended though since secure deployment 
       uses cookies.
     
-      For state less high performance use "Head: 
+      For stateless high performance use "Head: 
       less" header instead:
     
     - Added "Head: less" header, which you only 
