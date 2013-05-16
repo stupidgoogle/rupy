@@ -137,7 +137,7 @@ public class Daemon implements Runnable {
 <br></tt>
 	 *            if you are hosting a <a href="http://en.wikipedia.org/wiki/Platform_as_a_service">PaaS</a> 
 	 *            <i>across a cluster</i>, you have to hook your control domain app up with 
-	 *            {@link Daemon#set(Listener listener)}. And reply "OK" if the "auth" message authenticates:
+	 *            {@link Daemon#set(Listener listener)}. And reply "OK" if the "auth" message authenticates with {@link Deploy#hash(File file, String pass, String cookie)}:
 <tt><br><br>
 &nbsp;&nbsp;&nbsp;&nbsp;{"type": "auth", "file": "[host].jar", "pass": "[pass]", \"cookie\": "[salt]"}<br>
 <br></tt>
