@@ -88,6 +88,11 @@ public class Deploy extends Service {
 				throw new Exception("Maximum deployable size is 1MB. To deploy resources use .zip extension, total limit is 10MB!");
 			}
 		}
+		else {
+			if(size != null && size.length() > 0 && Integer.parseInt(size) > 104857600) {
+				throw new Exception("Maximum deployable size is 100MB. To deploy resources use .zip extension!");
+			}
+		}
 		
 		/*
 		 * Write file first, so we can hash it.
@@ -107,7 +112,13 @@ public class Deploy extends Service {
 			}
 		}
 		else {
-			pipe(in, out, 1024);
+			try {
+				pipe(in, out, 1024, 104857600); // 100MB limit
+			}
+			catch(IOException e) {
+				file.delete();
+				throw e;
+			}
 		}
 
 		out.flush();
@@ -137,7 +148,10 @@ public class Deploy extends Service {
 				}
 			}
 			else {
-				if(!auth.equals("OK")) {
+				if(auth.equals("OK")) {
+					event.reply().output().println("Deploy is propagating on cluster.");
+				}
+				else {
 					file.delete();
 					throw new Exception("Pass verification failed. (" + name + ")");
 				}
@@ -177,19 +191,6 @@ public class Deploy extends Service {
 			event.reply().code("500 Internal Server Error");
 			event.reply().output().print("<pre>" + trace.toString() + "</pre>");
 			throw event;
-		}
-		
-		/*
-		 * Deploy CLUSTER
-		 */
-		
-		if (Deploy.pass == null && !cluster) {
-			String message = "{\"type\": \"done\", \"file\": \"" + name + "\"}";
-			String done = (String) event.daemon().send(message);
-			
-			if(done.equals("OK")) {
-				event.reply().output().println("Deploy is propagating on cluster.");
-			}
 		}
 	}
 

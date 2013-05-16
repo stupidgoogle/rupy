@@ -141,11 +141,7 @@ public class Daemon implements Runnable {
 <tt><br><br>
 &nbsp;&nbsp;&nbsp;&nbsp;{"type": "auth", "file": "[host].jar", "pass": "[pass]", \"cookie\": "[salt]"}<br>
 <br></tt>
-	 *            Then you can propagate the deploy with {@link Deploy#deploy(String host, File file, String pass)} 
-	 *            <i>AFTER</i> you reply "OK" to the "done" message:
-<tt><br><br>
-&nbsp;&nbsp;&nbsp;&nbsp;{"type": "done", "file": "[host].jar"}<br>
-<br></tt>
+	 *            Then you can propagate the deploy with {@link Deploy#deploy(String host, File file, String pass)}.
 	 * </td></tr>
 	 * </table>
 	 */
