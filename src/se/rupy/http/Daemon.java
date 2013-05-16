@@ -139,7 +139,7 @@ public class Daemon implements Runnable {
 	 *            <i>across a cluster</i>, you have to hook your control domain app up with 
 	 *            {@link Daemon#set(Listener listener)}. And reply "OK" if the "auth" message authenticates with {@link Deploy#hash(File file, String pass, String cookie)}:
 <tt><br><br>
-&nbsp;&nbsp;&nbsp;&nbsp;{"type": "auth", "file": "[host].jar", "pass": "[pass]", \"cookie\": "[salt]"}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{"type": "auth", "file": "[host].jar", "pass": "[pass]", "cookie": "[salt]"}<br>
 <br></tt>
 	 *            Then you can propagate the deploy with {@link Deploy#deploy(String host, File file, String pass)}.
 	 * </td></tr>
