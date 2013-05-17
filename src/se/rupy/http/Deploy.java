@@ -129,7 +129,7 @@ public class Deploy extends Service {
 		 */
 		
 		if (Deploy.pass == null) {
-			String message = "{\"type\": \"auth\", \"file\": \"" + name + "\", \"pass\": \"" + pass + "\", \"cookie\": \"" + cookie + "\"}";
+			String message = "{\"type\": \"auth\", \"file\": \"" + name + "\", \"pass\": \"" + pass + "\", \"cookie\": \"" + cookie + "\", \"cluster\": " + cluster + "}";
 			String auth = (String) event.daemon().send(message);
 
 			if(auth.equals(message)) {
@@ -181,7 +181,7 @@ public class Deploy extends Service {
 		 */
 		
 		try {
-			event.reply().output().println("Application '" + deploy(event.daemon(), file, event) + "' deployed.");
+			event.reply().output().println("Application '" + deploy(event.daemon(), file, event) + "' deployed on '" + InetAddress.getLocalHost().getHostName() + "'.");
 		}
 		catch(Error e) {
 			StringWriter trace = new StringWriter();

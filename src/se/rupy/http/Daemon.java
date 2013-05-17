@@ -139,9 +139,17 @@ public class Daemon implements Runnable {
 	 *            <i>across a cluster</i>, you have to hook your control domain app up with 
 	 *            {@link Daemon#set(Listener listener)}. And reply "OK" if the "auth" message authenticates with {@link Deploy#hash(File file, String pass, String cookie)}:
 <tt><br><br>
-&nbsp;&nbsp;&nbsp;&nbsp;{"type": "auth", "file": "[host].jar", "pass": "[pass]", "cookie": "[salt]"}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{"type": "auth", "file": "[host].jar", "pass": "[pass]", "cookie": "[salt]", "cluster": [true/false]}<br>
 <br></tt>
-	 *            Then you can propagate the deploy with {@link Deploy#deploy(String host, File file, String pass)}.
+	 *            Then you can propagate the deploy with {@link Deploy#deploy(String host, File file, String pass)} 
+	 *            if "cluster" is "false". But for that to work you also need to answer this 
+	 *            message with "OK" for your known individual cluster hosts:
+<tt><br><br>
+&nbsp;&nbsp;&nbsp;&nbsp;{"type": "host", "file": "[name]"}<br>
+<br></tt>
+	 *            Where [name] is <i>your.domain.name<b>.jar</b></i>. For example I have two 
+	 *            hosts: <i>one.rupy.se</i> and <i>two.rupy.se</i> that belong under <i>host.rupy.se</i> 
+	 *            so I need to return "OK" if any of these two specific domains try to deploy.
 	 * </td></tr>
 	 * </table>
 	 */
@@ -391,7 +399,19 @@ public class Daemon implements Runnable {
 			if(name.equals(domain + ".jar")) {
 				return Deploy.Archive.deployer;
 			}
-
+			
+			try {
+				String message = "{\"type\": \"host\", \"file\": \"" + name + "\"}";
+				String ok = (String) send(message);
+				
+				if(ok.equals("OK")) {
+					return Deploy.Archive.deployer;
+				}
+			}
+			catch(Exception e) {
+				e.printStackTrace();
+			}
+			
 			Deploy.Archive archive = (Deploy.Archive) this.archive.get(name);
 
 			if(archive == null) {
