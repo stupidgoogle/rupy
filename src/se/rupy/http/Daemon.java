@@ -118,12 +118,10 @@ public class Daemon implements Runnable {
 	 *            Also if you want to deploy root domain, just deploy www.[host]; 
 	 *            so for example <i>www.rupy.se.jar</i> will trigger <i>http://rupy.se</i>. 
 	 *            To authenticate deployments you should use a properties file 
-	 *            called <i>passport</i> in the rupy root where you store [host]=[pass].
-	 * </td></tr>
-	 * <tr><td valign="top"><b>domain</b> (host.rupy.se) <i>requires</i> <b>host</b>
-	 * </td><td>
+	 *            called <i>passport</i> in the rupy root where you store [host]=[pass].<br><br>
 	 *            if your host is a <a href="http://en.wikipedia.org/wiki/Platform_as_a_service">PaaS</a> 
-	 *            on <i>one machine</i>; add the passport file to your control domain 
+	 *            on <i>one machine</i>; add -Djava.security.manager -Djava.security.policy=policy 
+	 *            to the rupy java process, add the passport file to your control domain 
 	 *            app folder instead (for example app/host.rupy.se/passport; hide it 
 	 *            from downloading with the code below) and create a symbolic link to 
 	 *            that in the rupy root.
@@ -133,8 +131,10 @@ public class Daemon implements Runnable {
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;public void filter(Event event) throws Event, Exception {<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;event.output().print("Nice try!");<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
-&nbsp;&nbsp;&nbsp;&nbsp;}<br>
-<br></tt>
+&nbsp;&nbsp;&nbsp;&nbsp;}</tt>
+	 * </td></tr>
+	 * <tr><td valign="top"><b>domain</b> (host.rupy.se) <i>requires</i> <b>host</b>
+	 * </td><td>
 	 *            if you are hosting a <a href="http://en.wikipedia.org/wiki/Platform_as_a_service">PaaS</a> 
 	 *            <i>across a cluster</i>, you have to hook your control domain app up with 
 	 *            {@link Daemon#set(Listener listener)}. And reply "OK" if the "auth" message authenticates with {@link Deploy#hash(File file, String pass, String cookie)}:
@@ -142,7 +142,7 @@ public class Daemon implements Runnable {
 &nbsp;&nbsp;&nbsp;&nbsp;{"type": "auth", "file": "[host].jar", "pass": "[pass]", "cookie": "[salt]", "cluster": [true/false]}<br>
 <br></tt>
 	 *            Then you can propagate the deploy with {@link Deploy#deploy(String host, File file, String pass)} 
-	 *            if "cluster" is "false". But for that to work you also need to answer this 
+	 *            if "cluster" is "false" in a separate thread. But for that to work you also need to answer this 
 	 *            message with "OK" for your known individual cluster hosts:
 <tt><br><br>
 &nbsp;&nbsp;&nbsp;&nbsp;{"type": "host", "file": "[name]"}<br>
@@ -172,7 +172,18 @@ public class Daemon implements Runnable {
 				"true");
 		panel = properties.getProperty("panel", "false").toLowerCase().equals(
 				"true");
-
+		boolean multi = properties.getProperty("multi", "false").toLowerCase().equals(
+				"true");
+		
+		if(multi) {
+			try {
+				setup();
+			}
+			catch(Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
 		if(host) {
 			domain = properties.getProperty("domain", "host.rupy.se");
 			PermissionCollection permissions = new Permissions();
@@ -399,11 +410,11 @@ public class Daemon implements Runnable {
 			if(name.equals(domain + ".jar")) {
 				return Deploy.Archive.deployer;
 			}
-			
+
 			try {
 				String message = "{\"type\": \"host\", \"file\": \"" + name + "\"}";
 				String ok = (String) send(message);
-				
+
 				if(ok.equals("OK")) {
 					return Deploy.Archive.deployer;
 				}
@@ -411,7 +422,7 @@ public class Daemon implements Runnable {
 			catch(Exception e) {
 				e.printStackTrace();
 			}
-			
+
 			Deploy.Archive archive = (Deploy.Archive) this.archive.get(name);
 
 			if(archive == null) {
@@ -427,9 +438,10 @@ public class Daemon implements Runnable {
 	}
 
 	private Listener listener;
+	private Chain listeners;
 
 	/**
-	 * Send Object to listener. We recommend you only send bootclasspath loaded 
+	 * Send Object to JVM listener. We recommend you only send bootclasspath loaded 
 	 * classes here otherwise hotdeploy will fail.
 	 * 
 	 * @param message to send
@@ -445,8 +457,8 @@ public class Daemon implements Runnable {
 	}
 
 	/**
-	 * Register your listener here.
-	 * 
+	 * Intra JVM many-to-one listener. Used on cluster for domain 
+	 * controller, use multicast on cluster instead.
 	 * @param listener
 	 */
 	public void set(Listener listener) {
@@ -473,7 +485,7 @@ public class Daemon implements Runnable {
 	}
 
 	/**
-	 * Cross class-loader communication interface. So that a class deployed 
+	 * Cross class-loader/cluster-node communication interface. So that a class deployed 
 	 * in one archive can send messages to a class deployed in another.
 	 * @author Marc
 	 */
@@ -484,6 +496,76 @@ public class Daemon implements Runnable {
 		 * @throws Exception
 		 */
 		public Object receive(Object message) throws Exception;
+	}
+
+	/**
+	 * Intra cluster-node multicast.
+	 * @param message max 256 characters!
+	 */
+	public void multicast(Object message) throws IOException {
+		byte[] data = message.toString().getBytes();
+		DatagramPacket packet = new DatagramPacket(data, data.length, address, 8888);
+		socket.send(packet);
+	}
+
+	/**
+	 * Add multicast listener.
+	 * @param listener
+	 */
+	public void add(Listener listener) {
+		if(listeners != null) {
+			listeners.add(listener);
+		}
+	}
+
+	/**
+	 * Remove multicast listener.
+	 * @param listener
+	 */
+	public void remove(Listener listener) {
+		if(listeners != null) {
+			listeners.remove(listener);
+		}
+	}
+	
+	Thread thread;
+	DatagramSocket socket;
+	InetAddress address;
+
+	private void setup() throws IOException {
+		listeners = new Chain();
+		address = InetAddress.getByName("224.2.2.3");
+		socket = new DatagramSocket();
+
+		thread = new Thread(new Runnable() {
+			public void run() {
+				try {
+					byte[] data = new byte[256];
+					MulticastSocket socket = new MulticastSocket(8888);
+					socket.joinGroup(address);
+
+					DatagramPacket packet = new DatagramPacket(data, data.length);
+					while (true) {
+						socket.receive(packet);
+						String message = new String(data, 0, packet.getLength());
+
+						synchronized (listeners) {
+							Iterator it = listeners.iterator();
+							
+							while(it.hasNext()) {
+								Listener listener = (Listener) it.next();
+								listener.receive(message);
+							}
+						}
+					}
+				}
+				catch(Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+
+		thread.start();
 	}
 
 	public void add(Service service) throws Exception {
@@ -864,7 +946,7 @@ public class Daemon implements Runnable {
 										event.log("write ---");
 								}
 							}
-							
+
 							if (key.isReadable() && event.push()) {
 								event.disconnect(null);
 							} else if (worker == null) {
@@ -916,7 +998,7 @@ public class Daemon implements Runnable {
 				//System.err.print(":");
 				event = (Event) queue.remove(0);
 			}
-			
+
 			return event;
 		}
 
@@ -943,10 +1025,10 @@ public class Daemon implements Runnable {
 
 		return worker;
 	}
-	
+
 	protected synchronized boolean match(Event event, Worker worker) {
 		boolean wakeup = true;
-		
+
 		if(event != null && worker != null) {
 			event.worker(null);
 			worker.event(null);
@@ -957,14 +1039,14 @@ public class Daemon implements Runnable {
 			catch(CancelledKeyException e) {
 				event.disconnect(e);
 			}
-			
+
 			wakeup = false;
 			event = null;
 		}
 		else if(event.worker() != null) {
 			return false;
 		}
-		
+
 		if(worker == null) {
 			worker = employ(event);
 
@@ -983,14 +1065,14 @@ public class Daemon implements Runnable {
 				return event.worker() == worker;
 			}
 		}
-		
+
 		if (Event.LOG) {
 			if (debug)
 				out.println("event " + event.index()
 						+ " and worker " + worker.index()
 						+ " found each other. (" + queue.size() + ")");
 		}
-		
+
 		worker.event(event);
 		event.worker(worker);
 

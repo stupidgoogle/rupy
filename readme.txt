@@ -294,5 +294,10 @@ VERSION:
       
     - Added deployment broadcast for PaaS virtual 
       hosting solution.
+      
+      0.5.1
+      
+      - Fixed cluster hosting propagation deploy.
+      - Added multicast for cluster realtime events.
         
 have fun!

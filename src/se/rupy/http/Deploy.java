@@ -223,6 +223,7 @@ public class Deploy extends Service {
 			permissions.add(new FilePermission("-", "read"));
 			permissions.add(new FilePermission("-", "write"));
 			permissions.add(new FilePermission("-", "delete"));
+			permissions.add(new PropertyPermission("user.dir", "read"));
 			permissions.add(new RuntimePermission("createClassLoader"));
 			access = new AccessControlContext(new ProtectionDomain[] {
 					new ProtectionDomain(null, permissions)});
@@ -235,15 +236,7 @@ public class Deploy extends Service {
 			date = file.lastModified();
 
 			JarInputStream in = new JarInput(new FileInputStream(file));
-			/* Moved this to name convention of the deploy jar
-			try {
-				Attributes attr = in.getManifest().getMainAttributes();
-				host = (String) attr.get("host");
-			}
-			catch(Exception e) {
-				e.printStackTrace();
-			}
-			 */
+			
 			if(daemon.host) {
 				host = name.substring(0, name.lastIndexOf('.'));
 				String path = "app" + File.separator + host + File.separator;
