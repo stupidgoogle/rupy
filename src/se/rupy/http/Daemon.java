@@ -151,6 +151,10 @@ public class Daemon implements Runnable {
 	 *            hosts: <i>one.rupy.se</i> and <i>two.rupy.se</i> that belong under <i>host.rupy.se</i> 
 	 *            so I need to return "OK" if any of these two specific domains try to deploy.
 	 * </td></tr>
+	 * <tr><td valign="top"><b>multi</b> (false)
+	 * </td><td>
+	 *            UDP multicast to all cluster nodes for real-time sync.
+	 * </td></tr>
 	 * </table>
 	 */
 	public Daemon(Properties properties) {
@@ -502,10 +506,18 @@ public class Daemon implements Runnable {
 	 * Intra cluster-node multicast.
 	 * @param message max 256 characters!
 	 */
-	public void multicast(Object message) throws IOException {
-		byte[] data = message.toString().getBytes();
-		DatagramPacket packet = new DatagramPacket(data, data.length, address, 8888);
-		socket.send(packet);
+	public void multicast(Object message) throws Exception {
+		String text = message.toString();
+		
+		if(text.length() > 256) {
+			throw new Exception("Message is too long (" + text.length() + ").");
+		}
+		
+		if(socket != null) {
+			byte[] data = text.getBytes();
+			DatagramPacket packet = new DatagramPacket(data, data.length, address, 8888);
+			socket.send(packet);
+		}
 	}
 
 	/**
@@ -545,6 +557,7 @@ public class Daemon implements Runnable {
 					socket.joinGroup(address);
 
 					DatagramPacket packet = new DatagramPacket(data, data.length);
+					
 					while (true) {
 						socket.receive(packet);
 						String message = new String(data, 0, packet.getLength());
