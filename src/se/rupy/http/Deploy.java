@@ -220,7 +220,7 @@ public class Deploy extends Service {
 		Archive() { // Archive for deployment.
 			PermissionCollection permissions = new Permissions();
 			permissions.add(new SocketPermission("*", "listen,accept,resolve,connect"));
-			permissions.add(new FilePermission("-", "read"));
+			permissions.add(new FilePermission("/-", "read"));
 			permissions.add(new FilePermission("-", "write"));
 			permissions.add(new FilePermission("-", "delete"));
 			permissions.add(new PropertyPermission("user.dir", "read"));
