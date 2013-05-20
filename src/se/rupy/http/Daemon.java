@@ -178,7 +178,7 @@ public class Daemon implements Runnable {
 				"true");
 		boolean multi = properties.getProperty("multi", "false").toLowerCase().equals(
 				"true");
-		
+
 		if(multi) {
 			try {
 				setup();
@@ -187,7 +187,7 @@ public class Daemon implements Runnable {
 				e.printStackTrace();
 			}
 		}
-		
+
 		if(host) {
 			domain = properties.getProperty("domain", "host.rupy.se");
 			PermissionCollection permissions = new Permissions();
@@ -489,7 +489,7 @@ public class Daemon implements Runnable {
 	}
 
 	/**
-	 * Cross class-loader/cluster-node communication interface. So that a class deployed 
+	 * Cross class-loader communication interface. So that a class deployed 
 	 * in one archive can send messages to a class deployed in another.
 	 * @author Marc
 	 */
@@ -503,20 +503,37 @@ public class Daemon implements Runnable {
 	}
 
 	/**
-	 * Intra cluster-node multicast.
-	 * @param message max 256 characters!
+	 * Cross cluster-node communication interface. So that applications deployed 
+	 * on one node can send messages to instances deployed in other nodes.
+	 * @author Marc
 	 */
-	public void multicast(Object message) throws Exception {
-		String text = message.toString();
-		
-		if(text.length() > 256) {
-			throw new Exception("Message is too long (" + text.length() + ").");
+	public interface ClusterListener {
+		/**
+		 * @param message convention is you start the message with 
+		 * [host].[node], so for example; if I send a message 
+		 * from cluster node <i>one</i> with application <i>host.rupy.se</i> 
+		 * the first bytes would be 'se.rupy.host.one' followed by payload.
+		 * Max length is 256 bytes!
+		 * @throws Exception
+		 */
+		public void receive(byte[] message) throws Exception;
+	}
+
+	/**
+	 * Send inter-cluster-node UDP multicast message.
+	 * @param message convention is you start the message with 
+	 * [host].[node], so for example; if I send a message 
+	 * from cluster node <i>one</i> with application <i>host.rupy.se</i> 
+	 * the first bytes would be 'se.rupy.host.one' followed by payload.
+	 * Max length is 256 bytes!
+	 */
+	public void send(byte[] message) throws Exception {
+		if(message.length > 256) {
+			throw new Exception("Message is too long (" + message.length + ").");
 		}
-		
+
 		if(socket != null) {
-			byte[] data = text.getBytes();
-			DatagramPacket packet = new DatagramPacket(data, data.length, address, 8888);
-			socket.send(packet);
+			socket.send(new DatagramPacket(message, message.length, address, 8888));
 		}
 	}
 
@@ -524,7 +541,7 @@ public class Daemon implements Runnable {
 	 * Add multicast listener.
 	 * @param listener
 	 */
-	public void add(Listener listener) {
+	public void add(ClusterListener listener) {
 		if(listeners != null) {
 			listeners.add(listener);
 		}
@@ -534,12 +551,12 @@ public class Daemon implements Runnable {
 	 * Remove multicast listener.
 	 * @param listener
 	 */
-	public void remove(Listener listener) {
+	public void remove(ClusterListener listener) {
 		if(listeners != null) {
 			listeners.remove(listener);
 		}
 	}
-	
+
 	Thread thread;
 	DatagramSocket socket;
 	InetAddress address;
@@ -557,17 +574,16 @@ public class Daemon implements Runnable {
 					socket.joinGroup(address);
 
 					DatagramPacket packet = new DatagramPacket(data, data.length);
-					
+
 					while (true) {
 						socket.receive(packet);
-						String message = new String(data, 0, packet.getLength());
 
 						synchronized (listeners) {
 							Iterator it = listeners.iterator();
-							
+
 							while(it.hasNext()) {
-								Listener listener = (Listener) it.next();
-								listener.receive(message);
+								ClusterListener listener = (ClusterListener) it.next();
+								listener.receive(data);
 							}
 						}
 					}
