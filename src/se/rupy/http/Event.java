@@ -379,7 +379,7 @@ public class Event extends Throwable implements Chain.Link {
 			//register(WRITE);
 			//key.selector().wakeup();
 
-			int available = block.fill(true);
+			int available = block.fill();
 
 			if (available > 0) {
 				long delay = daemon.delay - (max - System.currentTimeMillis());
@@ -403,8 +403,17 @@ public class Event extends Throwable implements Chain.Link {
 		throw new Exception("IO timeout. (" + daemon.delay + (agent == null ? "" : ", " + agent) + ")");
 	}
 
-	interface Block {
-		public int fill(boolean debug) throws IOException;
+	/**
+	 * Non blocking IO requires some blocking logic to handle IO choking.
+	 * @author Marc
+	 */
+	public interface Block {
+		/**
+		 * This is used by the event to ask the stream to push/pull IO.
+		 * @return
+		 * @throws IOException
+		 */
+		public int fill() throws IOException;
 	}
 
 	protected void disconnect(Exception e) {

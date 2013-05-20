@@ -61,7 +61,7 @@ public abstract class Input extends InputStream implements Event.Block {
 
 	protected int real(byte[] b, int off, int len) throws IOException {
 		try {
-			available = fill(false);
+			available = fill();
 
 			if (available == 0) {
 				if (init && !chunk && length >= event.query().length()) {
@@ -95,7 +95,7 @@ public abstract class Input extends InputStream implements Event.Block {
 		return false;
 	}
 
-	public int fill(boolean debug) throws IOException {
+	public int fill() throws IOException {
 		if (available > 0)
 			return available;
 

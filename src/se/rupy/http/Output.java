@@ -248,7 +248,7 @@ public abstract class Output extends OutputStream implements Event.Block {
 			out.flip();
 
 			while (out.remaining() > 0) {
-				int sent = fill(debug);
+				int sent = fill();
 
 				if (Event.LOG) {
 					if (debug) {
@@ -288,12 +288,12 @@ public abstract class Output extends OutputStream implements Event.Block {
 		}
 	}
 
-	public int fill(boolean debug) throws IOException {
+	public int fill() throws IOException {
 		ByteBuffer out = reply.event().worker().out();
 
 		int remaining = 0;
 
-		if (debug) {
+		if (reply.event().daemon().debug) {
 			remaining = out.remaining();
 		}
 
@@ -308,7 +308,7 @@ public abstract class Output extends OutputStream implements Event.Block {
 		}
 
 		if (Event.LOG) {
-			if (debug) {
+			if (reply.event().daemon().debug) {
 				reply.event().log("filled " + sent + " out of " + remaining,
 						Event.DEBUG);
 			}
