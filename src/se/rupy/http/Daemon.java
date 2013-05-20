@@ -801,6 +801,18 @@ public class Daemon implements Runnable {
 					archive = (Deploy.Archive) this.archive.get("www." + host + ".jar");
 				}
 
+				try {
+					String message = "{\"type\": \"host\", \"file\": \"" + host + ".jar\"}";
+					String ok = (String) send(message);
+
+					if(ok.equals("OK")) {
+						archive = (Deploy.Archive) this.archive.get(domain + ".jar");
+					}
+				}
+				catch(Exception e) {
+					e.printStackTrace();
+				}
+				
 				if(archive != null) {
 					Chain chain = (Chain) archive.chain().get(path);
 
