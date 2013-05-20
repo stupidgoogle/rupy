@@ -511,8 +511,9 @@ public class Daemon implements Runnable {
 		/**
 		 * @param message convention is you start the message with 
 		 * [host].[node], so for example; if I send a message 
-		 * from cluster node <i>one</i> with application <i>host.rupy.se</i> 
-		 * the first bytes would be 'se.rupy.host.one' followed by payload.
+		 * from cluster node <i>one</i> (InetAddress.getLocalHost().getHostName()) 
+		 * with application <i>host.rupy.se</i> the first bytes would be 
+		 * 'se.rupy.host.one' followed by payload.
 		 * Max length is 256 bytes!
 		 * @throws Exception
 		 */
@@ -523,8 +524,9 @@ public class Daemon implements Runnable {
 	 * Send inter-cluster-node UDP multicast message.
 	 * @param message convention is you start the message with 
 	 * [host].[node], so for example; if I send a message 
-	 * from cluster node <i>one</i> with application <i>host.rupy.se</i> 
-	 * the first bytes would be 'se.rupy.host.one' followed by payload.
+	 * from cluster node <i>one</i> (InetAddress.getLocalHost().getHostName()) 
+	 * with application <i>host.rupy.se</i> the first bytes would be 
+	 * 'se.rupy.host.one' followed by payload.
 	 * Max length is 256 bytes!
 	 */
 	public void send(byte[] message) throws Exception {
