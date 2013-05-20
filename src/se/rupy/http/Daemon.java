@@ -559,7 +559,6 @@ public class Daemon implements Runnable {
 		}
 	}
 
-	Thread thread;
 	DatagramSocket socket;
 	InetAddress address;
 
@@ -568,7 +567,7 @@ public class Daemon implements Runnable {
 		address = InetAddress.getByName("224.2.2.3");
 		socket = new DatagramSocket();
 
-		thread = new Thread(new Runnable() {
+		Thread thread = new Thread(new Runnable() {
 			public void run() {
 				try {
 					byte[] data = new byte[256];

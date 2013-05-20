@@ -14,9 +14,7 @@ import java.nio.channels.*;
  * Asynchronous HTTP request/response, this virtually represents a client
  * socket, but in the case where the server is behind a proxy we cannot depend
  * on that fact since sockets will be reused by multiple different external
- * clients. It's a performance tradeoff that we gladly accept though, since
- * hiding behind an Apache or some other proxy is this servers most probable
- * use.<br>
+ * clients.<br>
  * <br>
  * The hierarchy of the code is as follows:
 <tt><br><br>
