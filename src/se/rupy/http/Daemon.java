@@ -762,6 +762,22 @@ public class Daemon implements Runnable {
 			if(file.exists() && !file.isDirectory()) {
 				return new Deploy.Big(file);
 			}
+			
+			try {
+				String message = "{\"type\": \"host\", \"file\": \"" + host + ".jar\"}";
+				String ok = (String) send(message);
+				
+				if(ok.equals("OK")) {
+					file = new File("app" + File.separator + domain + path);
+
+					if(file.exists() && !file.isDirectory()) {
+						return new Deploy.Big(file);
+					}
+				}
+			}
+			catch(Exception e) {
+				e.printStackTrace();
+			}
 		}
 
 		return null;
