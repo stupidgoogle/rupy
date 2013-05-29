@@ -501,8 +501,11 @@ public class Event extends Throwable implements Chain.Link {
 		int index = 0;
 
 		if(daemon.host) {
+			final Deploy.Archive archive = daemon.archive(query().header("host"));
+			
 			Integer i = (Integer) AccessController.doPrivileged(new PrivilegedExceptionAction() {
 				public Object run() throws Exception {
+					Thread.currentThread().setContextClassLoader(archive);
 					return new Integer(service.index());
 				}
 			}, daemon.control);

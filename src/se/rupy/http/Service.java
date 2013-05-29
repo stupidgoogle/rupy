@@ -88,6 +88,8 @@ public abstract class Service implements Chain.Link {
 	 * own session cookie id; or removed, so that you may act upon both session
 	 * timeout and physical TCP disconnects.
 	 * 
+	 * On host cluster this gets invoked with a <i>null</i> context class loader.
+	 * 
 	 * @param session
 	 * @param type
 	 * @throws Exception

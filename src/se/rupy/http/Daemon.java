@@ -367,7 +367,7 @@ public class Daemon implements Runnable {
 		return selector;
 	}
 
-	protected void chain(Deploy.Archive archive) throws Exception {
+	protected void chain(final Deploy.Archive archive) throws Exception {
 		Deploy.Archive old = (Deploy.Archive) this.archive.get(archive.name());
 
 		if (old != null) {
@@ -382,6 +382,7 @@ public class Daemon implements Runnable {
 
 						AccessController.doPrivileged(new PrivilegedExceptionAction() {
 							public Object run() throws Exception {
+								Thread.currentThread().setContextClassLoader(archive);
 								service.destroy();
 								return null;
 							}
@@ -406,10 +407,6 @@ public class Daemon implements Runnable {
 		this.archive.put(archive.name(), archive);
 	}
 
-	/**
-	 * Get archive.
-	 * @return If null the archive is not deployed.
-	 */
 	public Deploy.Archive archive(String name) {
 		if(!name.endsWith(".jar")) {
 			name += ".jar";
@@ -469,9 +466,10 @@ public class Daemon implements Runnable {
 	/**
 	 * Intra JVM many-to-one listener. Used on cluster for domain 
 	 * controller, use multicast on cluster instead.
+	 * @return true if successful.
 	 * @param listener
 	 */
-	public void set(Listener listener) {
+	public boolean set(Listener listener) {
 		try {
 			/*
 			 * So only the controller can be added as listener since we use this feature to authenticate deployments.
@@ -488,10 +486,13 @@ public class Daemon implements Runnable {
 			}
 
 			this.listener = listener;
+			return true;
 		}
 		catch(IOException e) {
 			// if passport could not be created
 		}
+		
+		return false;
 	}
 
 	/**
@@ -515,7 +516,7 @@ public class Daemon implements Runnable {
 	 */
 	public interface ClusterListener {
 		/**
-		 * @param message convention is you start the message with 
+		 * @param message the message starts with header:
 		 * [host].[node], so for example; if I send a message 
 		 * from cluster node <i>one</i> (InetAddress.getLocalHost().getHostName()) 
 		 * with application <i>host.rupy.se</i> the first bytes would be 
@@ -575,12 +576,8 @@ public class Daemon implements Runnable {
 	
 	/**
 	 * Send inter-cluster-node UDP multicast message.
-	 * @param message convention is you start the message with 
-	 * [host].[node], so for example; if I send a message 
-	 * from cluster node <i>one</i> (InetAddress.getLocalHost().getHostName()) 
-	 * with application <i>host.rupy.se</i> the first bytes would be 
-	 * 'se.rupy.host.one' followed by payload.
-	 * Max length is 256 bytes!
+	 * @param message your payload.
+	 * Max length is 256 bytes including header: [host].[node]!
 	 */
 	public void send(byte[] message) throws Exception {
 		if(message.length > 256) {
@@ -588,6 +585,10 @@ public class Daemon implements Runnable {
 		}
 
 		if(socket != null) {
+			Deploy.Archive archive = (Deploy.Archive) Thread.currentThread().getContextClassLoader();
+			
+			System.out.println(archive.name());
+			
 			socket.send(new DatagramPacket(message, message.length, address, 8888));
 		}
 	}
@@ -655,12 +656,13 @@ public class Daemon implements Runnable {
 		add(this.service, service, null);
 	}
 
-	protected void add(HashMap map, final Service service, Deploy.Archive archive) throws Exception {
+	protected void add(HashMap map, final Service service, final Deploy.Archive archive) throws Exception {
 		String path = null;
 
 		if(host) {
 			path = (String) AccessController.doPrivileged(new PrivilegedExceptionAction() {
 				public Object run() throws Exception {
+					Thread.currentThread().setContextClassLoader(archive);
 					return service.path();
 				}
 			}, control);
@@ -691,6 +693,7 @@ public class Daemon implements Runnable {
 
 				AccessController.doPrivileged(new PrivilegedExceptionAction() {
 					public Object run() throws Exception {
+						Thread.currentThread().setContextClassLoader(archive);
 						if (old != null) {
 							throw new Exception(service.getClass().getName()
 									+ " with path '" + p + "' and index ["
@@ -722,6 +725,7 @@ public class Daemon implements Runnable {
 
 					Event e = (Event) AccessController.doPrivileged(new PrivilegedExceptionAction() {
 						public Object run() throws Exception {
+							Thread.currentThread().setContextClassLoader(archive);
 							service.create(daemon);
 							return null;
 						}
@@ -762,6 +766,7 @@ public class Daemon implements Runnable {
 
 					AccessController.doPrivileged(new PrivilegedExceptionAction() {
 						public Object run() throws Exception {
+							Thread.currentThread().setContextClassLoader(archive);
 							if (j != service.index()) {
 								a.remove(archive.name());
 								throw new Exception(service.getClass().getName()

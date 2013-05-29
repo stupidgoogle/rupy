@@ -256,7 +256,7 @@ public class Deploy extends Service {
 				permissions.add(new FilePermission(path + "-", "delete"));
 				permissions.add(new FilePermission("res" + File.separator + "-", "read"));
 				permissions.add(new PropertyPermission("user.dir", "read"));
-				permissions.add(new RuntimePermission("setContextClassLoader"));
+				//permissions.add(new RuntimePermission("setContextClassLoader"));
 				permissions.add(new RuntimePermission("getClassLoader"));
 				access = new AccessControlContext(new ProtectionDomain[] {
 						new ProtectionDomain(null, permissions)});
@@ -345,8 +345,11 @@ public class Deploy extends Service {
 			if(service) {
 				try {
 					if(daemon.host) {
+						final Deploy.Archive archive = this;
+						
 						Service s = (Service) AccessController.doPrivileged(new PrivilegedExceptionAction() {
 							public Object run() throws Exception {
+								Thread.currentThread().setContextClassLoader(archive);
 								return (Service) small.clazz.newInstance();
 							}
 						}, access());
