@@ -407,11 +407,11 @@ public class Event extends Throwable implements Chain.Link {
 				buffer += daemon.size;
 				
 				if(interest == READ) {
-					System.out.println("READ " + buffer);
+					//System.out.println("READ " + buffer);
 					channel.socket().setReceiveBufferSize(buffer);
 				}
 				else if(interest == WRITE) {
-					System.out.println("WRITE " + buffer);
+					//System.out.println("WRITE " + buffer);
 					channel.socket().setSendBufferSize(buffer);
 				}
 			}
