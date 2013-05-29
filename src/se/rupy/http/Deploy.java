@@ -181,7 +181,7 @@ public class Deploy extends Service {
 		 */
 		
 		try {
-			event.reply().output().println("Application '" + deploy(event.daemon(), file, event) + "' deployed on '" + InetAddress.getLocalHost().getHostName() + "'.");
+			event.reply().output().println("Application '" + deploy(event.daemon(), file, event) + "' deployed on '" + host() + "'.");
 		}
 		catch(Error e) {
 			StringWriter trace = new StringWriter();
@@ -194,6 +194,15 @@ public class Deploy extends Service {
 		}
 	}
 
+	protected static String host() {
+		try {
+			return InetAddress.getLocalHost().getHostName();
+		}
+		catch(Exception e) {
+			return "unavailable";
+		}
+	}
+	
 	protected static String deploy(Daemon daemon, File file, Event event) throws Exception {
 		Archive archive = new Archive(daemon, file, event);
 
