@@ -72,6 +72,7 @@ public class Query extends Hash {
 		int lines = 0;
 
 		while (line != null && !line.equals("")) {
+			//System.out.println(line);
 			int colon = line.indexOf(":");
 
 			if (colon > -1) {

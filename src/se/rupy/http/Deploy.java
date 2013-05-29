@@ -234,6 +234,7 @@ public class Deploy extends Service {
 			permissions.add(new FilePermission("-", "delete"));
 			permissions.add(new PropertyPermission("user.dir", "read"));
 			permissions.add(new RuntimePermission("createClassLoader"));
+			permissions.add(new RuntimePermission("setContextClassLoader"));
 			access = new AccessControlContext(new ProtectionDomain[] {
 					new ProtectionDomain(null, permissions)});
 		}
@@ -346,10 +347,9 @@ public class Deploy extends Service {
 				try {
 					if(daemon.host) {
 						final Deploy.Archive archive = this;
-						
+						Thread.currentThread().setContextClassLoader(archive);
 						Service s = (Service) AccessController.doPrivileged(new PrivilegedExceptionAction() {
 							public Object run() throws Exception {
-								Thread.currentThread().setContextClassLoader(archive);
 								return (Service) small.clazz.newInstance();
 							}
 						}, access());
@@ -407,6 +407,10 @@ public class Deploy extends Service {
 
 		protected HashSet service() {
 			return service;
+		}
+		
+		public String toString() {
+			return name + " " + host + " " + date;
 		}
 	}
 

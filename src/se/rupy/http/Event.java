@@ -222,13 +222,14 @@ public class Event extends Throwable implements Chain.Link {
 
 	protected void read() throws IOException {
 		touch();
-
-		if (!query.headers()) {		
+//System.out.println(1 + " " + query.header());
+		if (!query.headers()) {
 			disconnect(null);
 		}
-
+//System.out.println(2 + " " + query.header());
 		remote = address();
-
+//System.out.println(3 + " " + query.header());
+//System.out.println(this);
 		if (query.version() == null || !query.version().equalsIgnoreCase("HTTP/1.1")) {
 			reply.code("505 Not Supported");
 		}
@@ -243,7 +244,7 @@ public class Event extends Throwable implements Chain.Link {
 				}
 			}
 		}
-
+//System.out.println(4 + " " + query.header());
 		finish();
 	}
 
@@ -502,10 +503,9 @@ public class Event extends Throwable implements Chain.Link {
 
 		if(daemon.host) {
 			final Deploy.Archive archive = daemon.archive(query().header("host"));
-			
+			Thread.currentThread().setContextClassLoader(archive);
 			Integer i = (Integer) AccessController.doPrivileged(new PrivilegedExceptionAction() {
 				public Object run() throws Exception {
-					Thread.currentThread().setContextClassLoader(archive);
 					return new Integer(service.index());
 				}
 			}, daemon.control);

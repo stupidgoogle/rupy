@@ -35,7 +35,7 @@ public class Daemon implements Runnable {
 	Chain workers, queue;
 	Properties properties;
 	PrintStream out, access, error;
-	AccessControlContext control;
+	AccessControlContext control, no_control;
 	ConcurrentHashMap events, session;
 	int threads, timeout, cookie, delay, size, port, cache;
 	boolean verbose, debug, host, alive, panel;
@@ -191,7 +191,11 @@ public class Daemon implements Runnable {
 		if(host) {
 			domain = properties.getProperty("domain", "host.rupy.se");
 			PermissionCollection permissions = new Permissions();
+			permissions.add(new RuntimePermission("setContextClassLoader"));
 			control = new AccessControlContext(new ProtectionDomain[] {
+					new ProtectionDomain(null, permissions)});
+			permissions = new Permissions();
+			no_control = new AccessControlContext(new ProtectionDomain[] {
 					new ProtectionDomain(null, permissions)});
 		}
 
@@ -378,11 +382,9 @@ public class Daemon implements Runnable {
 
 				try {
 					if(host) {
-						//final Daemon daemon = this;
-
+						Thread.currentThread().setContextClassLoader(archive);
 						AccessController.doPrivileged(new PrivilegedExceptionAction() {
 							public Object run() throws Exception {
-								Thread.currentThread().setContextClassLoader(archive);
 								service.destroy();
 								return null;
 							}
@@ -576,20 +578,43 @@ public class Daemon implements Runnable {
 	
 	/**
 	 * Send inter-cluster-node UDP multicast message.
-	 * @param message your payload.
+	 * @param tail your payload.
 	 * Max length is 256 bytes including header: [host].[node]!
 	 */
-	public void send(byte[] message) throws Exception {
-		if(message.length > 256) {
-			throw new Exception("Message is too long (" + message.length + ").");
-		}
-
+	public void send(byte[] tail) throws Exception {
 		if(socket != null) {
 			Deploy.Archive archive = (Deploy.Archive) Thread.currentThread().getContextClassLoader();
+			String name = archive.name();
+
+			if(name == null) {
+				name = domain + ".jar";
+			}
 			
-			System.out.println(archive.name());
+			String[] reverse = name.split("\\.");
+			StringBuilder header = new StringBuilder();
+
+			for(int i = reverse.length - 2; i > -1; i--) {
+				header.append(reverse[i]);
+				
+				if(i > 0) {
+					header.append('.');
+				}
+			}
 			
-			socket.send(new DatagramPacket(message, message.length, address, 8888));
+			header.append("." + InetAddress.getLocalHost().getHostName());
+			
+			byte[] head = header.toString().getBytes();
+			
+			if(head.length + tail.length > 256) {
+				throw new Exception("Message is too long (" + header + " " + tail.length + ").");
+			}
+
+			byte[] data = new byte[head.length + tail.length];
+			
+			System.arraycopy(head, 0, data, 0, head.length);
+			System.arraycopy(tail, 0, data, head.length, tail.length);
+			
+			socket.send(new DatagramPacket(data, data.length, address, 8888));
 		}
 	}
 
@@ -660,9 +685,9 @@ public class Daemon implements Runnable {
 		String path = null;
 
 		if(host) {
+			Thread.currentThread().setContextClassLoader(archive);
 			path = (String) AccessController.doPrivileged(new PrivilegedExceptionAction() {
 				public Object run() throws Exception {
-					Thread.currentThread().setContextClassLoader(archive);
 					return service.path();
 				}
 			}, control);
@@ -690,10 +715,9 @@ public class Daemon implements Runnable {
 
 			if(host) {
 				final String p = path;
-
+				Thread.currentThread().setContextClassLoader(archive);
 				AccessController.doPrivileged(new PrivilegedExceptionAction() {
 					public Object run() throws Exception {
-						Thread.currentThread().setContextClassLoader(archive);
 						if (old != null) {
 							throw new Exception(service.getClass().getName()
 									+ " with path '" + p + "' and index ["
@@ -722,10 +746,9 @@ public class Daemon implements Runnable {
 			try {
 				if(host) {
 					final Daemon daemon = this;
-
+					Thread.currentThread().setContextClassLoader(archive);
 					Event e = (Event) AccessController.doPrivileged(new PrivilegedExceptionAction() {
 						public Object run() throws Exception {
-							Thread.currentThread().setContextClassLoader(archive);
 							service.create(daemon);
 							return null;
 						}
@@ -763,10 +786,9 @@ public class Daemon implements Runnable {
 				if(host) {
 					final HashMap a = this.archive;
 					final int j = i;
-
+					Thread.currentThread().setContextClassLoader(archive);
 					AccessController.doPrivileged(new PrivilegedExceptionAction() {
 						public Object run() throws Exception {
-							Thread.currentThread().setContextClassLoader(archive);
 							if (j != service.index()) {
 								a.remove(archive.name());
 								throw new Exception(service.getClass().getName()

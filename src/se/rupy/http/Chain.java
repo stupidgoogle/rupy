@@ -52,11 +52,10 @@ public class Chain extends LinkedList {
 			if(event.daemon().host) {
 				try {
 					final Deploy.Archive archive = event.daemon().archive(event.query().header("host"));
-					
+					Thread.currentThread().setContextClassLoader(archive);
 					Object o = AccessController.doPrivileged(new PrivilegedExceptionAction() {
 						public Object run() throws Exception {
 							try {
-								Thread.currentThread().setContextClassLoader(archive);
 								service.filter(event);
 								return null;
 							}
@@ -90,9 +89,9 @@ public class Chain extends LinkedList {
 			final Service service = (Service) get(i);
 
 			if(session.daemon().host) {
+				Thread.currentThread().setContextClassLoader(null);
 				AccessController.doPrivileged(new PrivilegedExceptionAction() {
 					public Object run() throws Exception {
-						Thread.currentThread().setContextClassLoader(null);
 						service.session(session, type);
 						return null;
 					}
