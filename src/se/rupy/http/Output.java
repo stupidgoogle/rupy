@@ -11,7 +11,7 @@ import java.util.*;
  */
 public abstract class Output extends OutputStream implements Event.Block {
 	public final static String EOL = "\r\n";
-	private final static byte[] server = ("Server: Rupy/0.5.1" + EOL).getBytes();
+	private final static byte[] server = ("Server: Rupy/1.0" + EOL).getBytes();
 	private final static byte[] close = ("Connection: Close" + EOL).getBytes();
 	private final static byte[] alive = ("Connection: Keep-Alive" + EOL).getBytes();
 	private final static byte[] chunked = ("Transfer-Encoding: Chunked" + EOL).getBytes();
