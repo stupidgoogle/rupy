@@ -446,18 +446,15 @@ public class Event extends Throwable implements Chain.Link {
 
 	protected final void session(final Service service) throws Exception {
 		String key = cookie(query.header("cookie"), "key");
-
+/*
 		if(key == null && query.method() == Query.GET) {
-
-			/*
-			 * XSS comet cookie: this means first GETs are parsed!
-			 * TODO: This should be removed because you can use a P3P header to fix this, go figure!
-			 */
+			// XSS comet cookie: this means first GETs are parsed!
+			// TODO: This should be removed because you can use a P3P header to fix this, go figure!
 			query.parse();
 			String cookie = query.string("cookie");
 			key = cookie.length() > 0 ? cookie : null;
 		}
-
+*/
 		if (key != null) {
 			session = (Session) daemon.session().get(key);
 
