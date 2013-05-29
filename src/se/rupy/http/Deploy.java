@@ -252,6 +252,7 @@ public class Deploy extends Service {
 				String path = "app" + File.separator + host + File.separator;
 				PermissionCollection permissions = new Permissions();
 				permissions.add(new SocketPermission("*", "resolve,connect"));
+				permissions.add(new SocketPermission("224.2.2.3", "accept,resolve,connect"));
 				permissions.add(new FilePermission(path + "-", "read"));
 				permissions.add(new FilePermission(path + "-", "write"));
 				permissions.add(new FilePermission(path + "-", "delete"));
