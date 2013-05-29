@@ -236,20 +236,25 @@ public class Daemon implements Runnable {
 		DATE = new SimpleDateFormat("yy-MM-dd HH:mm:ss.SSS");
 	}
 
-	protected void error(Event event, Throwable t) throws IOException {
+	protected void error(Event e, Throwable t) throws IOException {
 		//t.printStackTrace();
 
 		if (error != null && t != null && !(t instanceof Failure.Close)) {
+			if(errlis != null) {
+				if(!errlis.error(e, t))
+					return;
+			}
+			
 			Calendar date = Calendar.getInstance();
 			StringBuilder b = new StringBuilder();
 
 			b.append(DATE.format(date.getTime()));
 			b.append(' ');
-			b.append(event.remote());
+			b.append(e.remote());
 			b.append(' ');
-			b.append(event.query().path());
+			b.append(e.query().path());
 
-			String parameters = event.query().parameters();
+			String parameters = e.query().parameters();
 
 			if(parameters != null) {
 				b.append(' ');
@@ -443,7 +448,8 @@ public class Daemon implements Runnable {
 
 	private Listener listener;
 	private Chain listeners;
-
+	private ErrorListener errlis;
+	
 	/**
 	 * Send Object to JVM listener. We recommend you only send bootclasspath loaded 
 	 * classes here otherwise hotdeploy will fail.
@@ -520,6 +526,53 @@ public class Daemon implements Runnable {
 		public void receive(byte[] message) throws Exception;
 	}
 
+	/**
+	 * Error listener, so you can for example send a warning mail and swallow 
+	 * certain exceptions to not be logged.
+	 * @author Marc
+	 */
+	public interface ErrorListener {
+		/**
+		 * Here you will receive all errors before they are logged.
+		 * @param e the responsible
+		 * @param t the stack trace
+		 * @return true if you wan't this error logged.
+		 * @throws Exception
+		 */
+		public boolean error(Event e, Throwable t);
+	}
+	
+	/**
+	 * Listens for errors.
+	 * @return true if successful.
+	 * @param listener
+	 */
+	public boolean set(ErrorListener listener) {
+		try {
+			/*
+			 * So only the controller can be added as error listener as the controller will mail.
+			 */
+
+			if(host) {
+				File pass = new File("app/" + domain + "/passport");
+
+				if(!pass.exists()) {
+					pass.createNewFile();
+				}
+
+				pass.canRead();
+			}
+
+			this.errlis = errlis;
+			return true;
+		}
+		catch(IOException e) {
+			// if passport could not be created
+		}
+		
+		return false;
+	}
+	
 	/**
 	 * Send inter-cluster-node UDP multicast message.
 	 * @param message convention is you start the message with 

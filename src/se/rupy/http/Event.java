@@ -388,6 +388,34 @@ public class Event extends Throwable implements Chain.Link {
 				return available;
 			}
 
+			if(delay > 100) {
+				/*
+				 * Increase socket buffer.
+				 * For really old client computers and slow 
+				 * internet connections we increase the buffer.
+				 */
+				
+				int buffer = 0;
+				
+				if(interest == READ) {
+					buffer = channel.socket().getReceiveBufferSize();
+				}
+				else if(interest == WRITE) {
+					buffer = channel.socket().getSendBufferSize();
+				}
+				
+				buffer += daemon.size;
+				
+				if(interest == READ) {
+					System.out.println("READ " + buffer);
+					channel.socket().setReceiveBufferSize(buffer);
+				}
+				else if(interest == WRITE) {
+					System.out.println("WRITE " + buffer);
+					channel.socket().setSendBufferSize(buffer);
+				}
+			}
+			
 			Thread.yield();
 			worker.snooze(10);
 			key.selector().wakeup();
