@@ -81,6 +81,8 @@ public class Event extends Throwable implements Chain.Link {
 		channel = ((ServerSocketChannel) key.channel()).accept();
 		channel.configureBlocking(false);
 
+		//System.out.println(channel.socket().getSendBufferSize());
+
 		this.daemon = daemon;
 		this.index = index;
 		//this.key = key;
@@ -374,16 +376,11 @@ public class Event extends Throwable implements Chain.Link {
 		while (System.currentTimeMillis() < max) {			
 			register();
 
-			//register(READ);
-			//key.selector().wakeup();
-			//register(WRITE);
-			//key.selector().wakeup();
-
 			int available = block.fill();
 
-			if (available > 0) {
-				long delay = daemon.delay - (max - System.currentTimeMillis());
+			long delay = daemon.delay - (max - System.currentTimeMillis());
 
+			if (available > 0) {
 				if (Event.LOG) {
 					log("delay " + delay + " " + available, VERBOSE);
 				}
@@ -394,13 +391,11 @@ public class Event extends Throwable implements Chain.Link {
 			Thread.yield();
 			worker.snooze(10);
 			key.selector().wakeup();
-
-			//System.err.print(".");
 		}
 
 		String agent = query.header("user-agent");
 
-		throw new Exception("IO timeout. (" + daemon.delay + (agent == null ? "" : ", " + agent) + ")");
+		throw new Exception("IO timeout. (" + daemon.delay + ")");
 	}
 
 	/**

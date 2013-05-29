@@ -237,7 +237,7 @@ public abstract class Output extends OutputStream implements Event.Block {
 		} catch (IOException e) {
 			Failure.chain(e);
 		} catch (Exception e) {
-			throw (IOException) new IOException("Remaining (" + length + ", " + remaining + ", " + off + ", " + len + ")").initCause(e);
+			throw (IOException) new IOException("You need to increase your socket write buffer!").initCause(e);
 		}
 	}
 

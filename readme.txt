@@ -299,5 +299,13 @@ VERSION:
       
       - Fixed cluster hosting propagation deploy.
       - Added multicast for cluster realtime events.
+      - For big files and old client computers + slow 
+        internet connections we need to increase the 
+        socket write buffer to avoid clients being 
+        disconnected, example linux commands (as root):
+        
+        > echo 'net.core.wmem_max=1048576' >> /etc/sysctl.conf
+        > echo 'net.ipv4.tcp_wmem= 16384 65536 1048576' >> /etc/sysctl.conf
+        > sysctl -p
         
 have fun!
