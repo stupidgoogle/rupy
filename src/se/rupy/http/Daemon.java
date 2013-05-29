@@ -581,7 +581,7 @@ public class Daemon implements Runnable {
 	 * @param tail your payload.
 	 * Max length is 256 bytes including header: [host].[node]!
 	 */
-	public void send(byte[] tail) throws Exception {
+	public void broadcast(byte[] tail) throws Exception {
 		if(socket != null) {
 			Deploy.Archive archive = (Deploy.Archive) Thread.currentThread().getContextClassLoader();
 			String name = archive.name();
