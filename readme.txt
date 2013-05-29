@@ -308,4 +308,7 @@ VERSION:
         > echo 'net.ipv4.tcp_wmem= 16384 65536 1048576' >> /etc/sysctl.conf
         > sysctl -p
         
+        where 1048576 should be the size of your 
+        largest file.
+        
 have fun!

@@ -427,12 +427,12 @@ public class Event extends Throwable implements Chain.Link {
 	}
 
 	/**
-	 * Non blocking IO requires some blocking logic to handle IO choking.
+	 * Non blocking IO requires some blocking logic to handle ethernet latency.
 	 * @author Marc
 	 */
 	public interface Block {
 		/**
-		 * This is used by the event to ask the stream to push/pull IO.
+		 * This is used by the event to ask the query/reply to pull/push data.
 		 * @return
 		 * @throws IOException
 		 */
