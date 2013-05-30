@@ -544,7 +544,7 @@ public class Daemon implements Runnable {
 		 * @return true if you wan't this error logged.
 		 * @throws Exception
 		 */
-		public boolean error(Event e, Throwable t);
+		public boolean log(Event e, Throwable t);
 	}
 	
 	/**
