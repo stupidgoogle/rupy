@@ -81,11 +81,8 @@ public class Event extends Throwable implements Chain.Link {
 		channel = ((ServerSocketChannel) key.channel()).accept();
 		channel.configureBlocking(false);
 
-		//System.out.println(channel.socket().getSendBufferSize());
-
 		this.daemon = daemon;
 		this.index = index;
-		//this.key = key;
 
 		query = new Query(this);
 		reply = new Reply(this);
@@ -222,14 +219,13 @@ public class Event extends Throwable implements Chain.Link {
 
 	protected void read() throws IOException {
 		touch();
-//System.out.println(1 + " " + query.header());
+
 		if (!query.headers()) {
 			disconnect(null);
 		}
-//System.out.println(2 + " " + query.header());
+
 		remote = address();
-//System.out.println(3 + " " + query.header());
-//System.out.println(this);
+
 		if (query.version() == null || !query.version().equalsIgnoreCase("HTTP/1.1")) {
 			reply.code("505 Not Supported");
 		}
@@ -244,7 +240,7 @@ public class Event extends Throwable implements Chain.Link {
 				}
 			}
 		}
-//System.out.println(4 + " " + query.header());
+
 		finish();
 	}
 
@@ -394,6 +390,15 @@ public class Event extends Throwable implements Chain.Link {
 				 * Increase socket buffer.
 				 * For really old client computers and slow 
 				 * internet connections we increase the buffer.
+				 * This only helps if you, as root, have done:
+				 * 
+				 * > echo 'net.core.wmem_max=1048576' >> /etc/sysctl.conf
+				 * > echo 'net.ipv4.tcp_wmem= 16384 65536 1048576' >> /etc/sysctl.conf
+				 * > sysctl -p
+				 * 
+				 * on your linux server, really. Where 1048576 
+				 * should be replaced with the size of your 
+				 * largest file.
 				 */
 				
 				int buffer = 0;
@@ -408,11 +413,9 @@ public class Event extends Throwable implements Chain.Link {
 				buffer += daemon.size;
 				
 				if(interest == READ) {
-					//System.out.println("READ " + buffer);
 					channel.socket().setReceiveBufferSize(buffer);
 				}
 				else if(interest == WRITE) {
-					//System.out.println("WRITE " + buffer);
 					channel.socket().setSendBufferSize(buffer);
 				}
 			}
