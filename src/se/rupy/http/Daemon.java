@@ -29,7 +29,7 @@ public class Daemon implements Runnable {
 	private HashMap archive, service;
 	private Heart heart;
 	private Selector selector;
-	private String domain;
+	private String domain, name;
 	private static DateFormat DATE;
 
 	Chain workers, queue;
@@ -221,6 +221,8 @@ public class Daemon implements Runnable {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		
+		name = Deploy.host();
 	}
 
 	public Properties properties() {
@@ -601,7 +603,7 @@ public class Daemon implements Runnable {
 				}
 			}
 			
-			header.append("." + InetAddress.getLocalHost().getHostName());
+			header.append("." + name);
 			
 			byte[] head = header.toString().getBytes();
 			
