@@ -247,7 +247,7 @@ public class Daemon implements Runnable {
 
 		if (error != null && t != null && !(t instanceof Failure.Close)) {
 			if(errlis != null) {
-				if(!errlis.error(e, t))
+				if(!errlis.log(e, t))
 					return;
 			}
 			
