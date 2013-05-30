@@ -221,10 +221,24 @@ public class Daemon implements Runnable {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
-		name = Deploy.host();
 	}
 
+	/**
+	 * @return hostname
+	 */
+	public String name() {
+		if(name == null) {
+			try {
+				return InetAddress.getLocalHost().getHostName();
+			}
+			catch(Exception e) {
+				return "unavailable";
+			}
+		}
+		
+		return name;
+	}
+	
 	public Properties properties() {
 		return properties;
 	}
@@ -522,7 +536,7 @@ public class Daemon implements Runnable {
 		/**
 		 * @param message the message starts with header:
 		 * [host].[node], so for example; if I send a message 
-		 * from cluster node <i>one</i> (InetAddress.getLocalHost().getHostName()) 
+		 * from cluster node <i>one</i> ({@link Daemon#name()}) 
 		 * with application <i>host.rupy.se</i> the first bytes would be 
 		 * 'se.rupy.host.one' followed by payload.
 		 * Max length is 256 bytes!
@@ -603,7 +617,7 @@ public class Daemon implements Runnable {
 				}
 			}
 			
-			header.append("." + name);
+			header.append("." + name());
 			
 			byte[] head = header.toString().getBytes();
 			

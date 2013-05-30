@@ -437,7 +437,7 @@ public class Event extends Throwable implements Chain.Link {
 	public interface Block {
 		/**
 		 * This is used by the event to ask the query/reply to pull/push data.
-		 * @return
+		 * @return how many bytes was sent
 		 * @throws IOException
 		 */
 		public int fill() throws IOException;

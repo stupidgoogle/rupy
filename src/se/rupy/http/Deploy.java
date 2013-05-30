@@ -181,7 +181,7 @@ public class Deploy extends Service {
 		 */
 		
 		try {
-			event.reply().output().println("Application '" + deploy(event.daemon(), file, event) + "' deployed on '" + host() + "'.");
+			event.reply().output().println("Application '" + deploy(event.daemon(), file, event) + "' deployed on '" + event.daemon().name() + "'.");
 		}
 		catch(Error e) {
 			StringWriter trace = new StringWriter();
@@ -191,15 +191,6 @@ public class Deploy extends Service {
 			event.reply().code("500 Internal Server Error");
 			event.reply().output().print("<pre>" + trace.toString() + "</pre>");
 			throw event;
-		}
-	}
-
-	protected static String host() {
-		try {
-			return InetAddress.getLocalHost().getHostName();
-		}
-		catch(Exception e) {
-			return "unavailable";
 		}
 	}
 	
