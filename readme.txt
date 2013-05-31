@@ -295,21 +295,21 @@ VERSION:
     - Added deployment broadcast for PaaS virtual 
       hosting solution.
       
-    1.0 Final Stable Release
+    1.0 Release
       
-      - Fixed cluster hosting propagation deploy.
-      - Added multicast for cluster realtime events.
-      - For big files and old client computers + 
-        slow internet connections we need to increase 
-        the socket write buffer to avoid clients 
-        being disconnected, example linux commands 
-        (as root):
+    - Fixed cluster hosting propagation deploy.
+    - Added multicast for cluster realtime events.
+    - For big files and old client computers + 
+      slow internet connections we need to increase 
+      the socket write buffer to avoid clients 
+      being disconnected, example linux commands 
+      (as root):
         
         > echo 'net.core.wmem_max=1048576' >> /etc/sysctl.conf
         > echo 'net.ipv4.tcp_wmem= 16384 65536 1048576' >> /etc/sysctl.conf
         > sysctl -p
         
-        where 1048576 should be the size of your 
-        largest file.
+      where 1048576 should be the size of your 
+      largest file.
         
 have fun!
