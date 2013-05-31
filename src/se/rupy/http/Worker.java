@@ -157,7 +157,7 @@ public class Worker implements Runnable, Chain.Link {
 					System.exit(-1);
 				}
 
-				event = null;
+				//event = null;
 				return false;
 			}
 
