@@ -125,7 +125,7 @@ public abstract class Input extends InputStream implements Event.Block {
 	 * @throws IOException
 	 */
 	public String line() throws IOException {
-		StringBuffer buffer = new StringBuffer("");
+		StringBuilder buffer = new StringBuilder();
 
 		while (true) {
 			if (buffer.length() > 2048) { // Facebook... :P

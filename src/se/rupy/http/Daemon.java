@@ -1224,7 +1224,6 @@ public class Daemon implements Runnable {
 				return false;
 			}
 			else if(event.worker() != null) {
-				//System.err.print(".");
 				return event.worker() == worker;
 			}
 		}

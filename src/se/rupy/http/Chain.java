@@ -121,7 +121,7 @@ public class Chain extends LinkedList {
 	}
 
 	public String toString() {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		Iterator it = iterator();
 
 		buffer.append('[');
