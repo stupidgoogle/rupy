@@ -150,7 +150,7 @@ public class Worker implements Runnable, Chain.Link {
 				}
 				catch (IOException e) {}
 				
-				reset(new Exception("Threadlock " + lock + " (" + event.query().path() + ")"));
+				reset(new Exception("Threadlock"));
 
 				if(exit) {
 					System.err.println("Rupy stopped for debugging!");

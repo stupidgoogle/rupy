@@ -153,7 +153,11 @@ public class Daemon implements Runnable {
 	 * </td></tr>
 	 * <tr><td valign="top"><b>multi</b> (false)
 	 * </td><td>
-	 *            UDP multicast to all cluster nodes for real-time sync.
+	 *            UDP multicast to all cluster nodes for real-time sync. But for this to work you also need to answer this 
+	 *            message with "OK" for your known individual cluster ips:
+<tt><br><br>
+&nbsp;&nbsp;&nbsp;&nbsp;{"type": "packet", "from": "[ip]"}<br>
+<br></tt>
 	 * </td></tr>
 	 * </table>
 	 */
@@ -674,12 +678,17 @@ public class Daemon implements Runnable {
 					while (true) {
 						socket.receive(packet);
 
-						synchronized (listeners) {
-							Iterator it = listeners.iterator();
+						String message = "{\"type\": \"packet\", \"from\": \"" + packet.getAddress() + "\"}";
+						String ok = (String) send(message);
+						
+						if(ok.equals("OK")) {
+							synchronized (listeners) {
+								Iterator it = listeners.iterator();
 
-							while(it.hasNext()) {
-								ClusterListener listener = (ClusterListener) it.next();
-								listener.receive(data);
+								while(it.hasNext()) {
+									ClusterListener listener = (ClusterListener) it.next();
+									listener.receive(data);
+								}
 							}
 						}
 					}
