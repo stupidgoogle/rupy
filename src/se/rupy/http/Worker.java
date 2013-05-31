@@ -145,10 +145,10 @@ public class Worker implements Runnable, Chain.Link {
 			lock = (int) (System.currentTimeMillis() - touch);
 
 			if(lock > daemon.delay) {
-				try {
-					daemon.error.write(stack(thread).getBytes());
-				}
-				catch (IOException e) {}
+				//try {
+				//	daemon.error.write(stack(thread).getBytes());
+				//}
+				//catch (IOException e) {}
 				
 				reset(new Exception("Threadlock"));
 
