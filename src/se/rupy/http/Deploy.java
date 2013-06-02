@@ -1,12 +1,15 @@
 package se.rupy.http;
 
 import java.io.*;
+import java.lang.reflect.ReflectPermission;
 import java.math.BigInteger;
 import java.net.*;
 import java.security.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.jar.*;
+
+import javax.net.ssl.SSLPermission;
 
 /**
  * Hot-deploys an application containing one or many service filters from disk
@@ -249,8 +252,10 @@ public class Deploy extends Service {
 				permissions.add(new FilePermission(path + "-", "delete"));
 				permissions.add(new FilePermission("res" + File.separator + "-", "read"));
 				permissions.add(new PropertyPermission("user.dir", "read"));
-				//permissions.add(new RuntimePermission("setContextClassLoader"));
+				permissions.add(new RuntimePermission("accessDeclaredMembers"));
 				permissions.add(new RuntimePermission("getClassLoader"));
+				permissions.add(new SSLPermission("setHostnameVerifier"));
+				permissions.add(new ReflectPermission("suppressAccessChecks"));
 				access = new AccessControlContext(new ProtectionDomain[] {
 						new ProtectionDomain(null, permissions)});
 				new File(path).mkdirs();
@@ -433,21 +438,22 @@ public class Deploy extends Service {
 			new File(root + path).mkdirs();
 
 			File file = new File(root + name);
-			/*
+			/* why doesent zip archives preserve dates?
+			 * 
+			long past = file.lastModified();
+			long future = entry.getTime();
+			
 			if(file.exists()) {
-				long past = file.lastModified();
-				long future = entry.getTime();
-
-				System.out.println(new Date(past));
-				System.out.println(new Date(future));
-
-				if(past >= future) {
+				System.out.println(file + " " + (past == future));
+				
+				if(past == future) {
 					return file;
 				}
 			}
-			 */
+			*/
 			file.createNewFile();
-
+			//file.setLastModified(future);
+			
 			OutputStream out = new FileOutputStream(file);
 
 			pipe(in, out);

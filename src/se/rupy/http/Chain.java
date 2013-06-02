@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FilePermission;
 import java.net.SocketPermission;
 import java.security.AccessControlContext;
+import java.security.AccessControlException;
 import java.security.AccessController;
 import java.security.PermissionCollection;
 import java.security.Permissions;
@@ -52,7 +53,12 @@ public class Chain extends LinkedList {
 			if(event.daemon().host) {
 				try {
 					final Deploy.Archive archive = event.daemon().archive(event.query().header("host"));
-					Thread.currentThread().setContextClassLoader(archive);
+					try {
+						Thread.currentThread().setContextClassLoader(archive);
+					}
+					catch(AccessControlException e) {
+						// recursive chaining fails here, no worries! ;)
+					}
 					Object o = AccessController.doPrivileged(new PrivilegedExceptionAction() {
 						public Object run() throws Exception {
 							try {
