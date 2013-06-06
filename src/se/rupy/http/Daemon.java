@@ -1014,11 +1014,24 @@ public class Daemon implements Runnable {
 				}
 
 				File[] app = new File(Deploy.path).listFiles(new Filter());
-
+				File domain = null;
+				
 				if (app != null) {
+					if(host) {
+						domain = new File("app" + File.separator + this.domain + ".jar");
+						Deploy.deploy(this, domain, null);
+					}
+					
 					for (int i = 0; i < app.length; i++) {
 						try {
-							Deploy.deploy(this, app[i], null);
+							if(host) {
+								if(!app[i].getPath().equals(domain.getPath())) {
+									Deploy.deploy(this, app[i], null);
+								}
+							}
+							else {
+								Deploy.deploy(this, app[i], null);
+							}
 						}
 						catch(Error e) {
 							e.printStackTrace();

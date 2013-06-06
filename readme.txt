@@ -311,5 +311,10 @@ VERSION:
         
       where 1048576 should be the size of your 
       largest file.
+      
+    1.1 Patch
+    
+    - Added so you can get your database password 
+      from the domain controller on host cluster.
         
 have fun!
