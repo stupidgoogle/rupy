@@ -11,6 +11,8 @@ import java.util.jar.*;
 
 import javax.net.ssl.SSLPermission;
 
+import se.rupy.http.Daemon.Listener;
+
 /**
  * Hot-deploys an application containing one or many service filters from disk
  * with simplistic dynamic class loading, eventually after receiving it through
@@ -196,7 +198,9 @@ public class Deploy extends Service {
 	}
 
 	/**
-	 * This is our dynamic classloader. Very simple, basically just extracts a jar and writes all files to disk except .class files which are loaded into the JVM. All {@link Service} classes are instantiated.
+	 * This is our dynamic classloader. Very simple, basically just extracts a jar and 
+	 * writes all files to disk except .class files which are loaded into the JVM. All 
+	 * {@link Service} classes are instantiated.
 	 * @author Marc
 	 */
 	public static class Archive extends ClassLoader {
@@ -675,7 +679,12 @@ public class Deploy extends Service {
 	 * deploy or re-deploy it!<br>
 	 * <br>
 	 * Basically: don't put passwords in clear text in the deployment 
-	 * jar and you will be fine!
+	 * jar and you will be fine! To get your password on <i>host.rupy.se</i>
+	 * call {@link Daemon#send(Object message)} with "{"type": "password"}"
+	 * like so:
+<tt><br><br>
+&nbsp;&nbsp;&nbsp;&nbsp;String password = (String) daemon.send("{\"type\": \"password\"}");<br>
+<br></tt>
 	 */
 	public static String hash(File file, String pass, String cookie) throws NoSuchAlgorithmException, FileNotFoundException, IOException {
 		String hash = hash(file);

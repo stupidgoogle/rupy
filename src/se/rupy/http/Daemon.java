@@ -669,12 +669,13 @@ public class Daemon implements Runnable {
 		Thread thread = new Thread(new Runnable() {
 			public void run() {
 				try {
-					byte[] data = new byte[256];
 					MulticastSocket socket = new MulticastSocket(8888);
 					socket.joinGroup(address);
 
+					byte[] empty = new byte[256];
+					byte[] data = new byte[256];
 					DatagramPacket packet = new DatagramPacket(data, data.length);
-
+					
 					while (true) {
 						socket.receive(packet);
 
@@ -691,6 +692,8 @@ public class Daemon implements Runnable {
 								}
 							}
 						}
+						
+						System.arraycopy(empty, 0, data, 0, 256);
 					}
 				}
 				catch(Exception e) {
