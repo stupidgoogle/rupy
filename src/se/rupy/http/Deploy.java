@@ -60,24 +60,24 @@ public class Deploy extends Service {
 		else {
 			cookie = event.session().key();
 		}
-		
+
 		if(event.query().method() == Query.GET) {
 			//System.out.println(cookie);
 			event.output().print(cookie);
 			throw event;
 		}
-		
+
 		if(event.session() != null) {
 			if(cookie == event.session().string("cookie", "")) {
 				throw new Exception("Cookie allready used!");
 			}
 		}
-		
+
 		String name = event.query().header("file");
 		String size = event.query().header("size");
 		boolean cluster = Boolean.parseBoolean(event.query().header("cluster"));
 		String pass = event.query().header("pass");
-		
+
 		if (name == null) {
 			throw new Failure("File header missing.");
 		}
@@ -96,41 +96,30 @@ public class Deploy extends Service {
 				throw new Exception("Maximum deployable size is 100MB. To deploy resources use .zip extension!");
 			}
 		}
-		
+
 		/*
 		 * Write file first, so we can hash it.
 		 */
-		
+
 		File file = new File(path + name);
 		OutputStream out = new FileOutputStream(file);
 		InputStream in = event.query().input();
 
-		if (Deploy.pass == null) {
-			try {
-				pipe(in, out, 1024, 1048576); // 1MB limit
-			}
-			catch(IOException e) {
-				file.delete();
-				throw e;
-			}
+		try {
+			pipe(in, out, 1024, Deploy.pass == null ? 1048576 : 104857600); // 1MB limit OR 100MB limit
 		}
-		else {
-			try {
-				pipe(in, out, 1024, 104857600); // 100MB limit
-			}
-			catch(IOException e) {
-				file.delete();
-				throw e;
-			}
+		catch(IOException e) {
+			file.delete();
+			throw e;
 		}
 
 		out.flush();
 		out.close();
-		
+
 		/*
 		 * Authenticate
 		 */
-		
+
 		if (Deploy.pass == null) {
 			String message = "{\"type\": \"auth\", \"file\": \"" + name + "\", \"pass\": \"" + pass + "\", \"cookie\": \"" + cookie + "\", \"cluster\": " + cluster + "}";
 			String auth = (String) event.daemon().send(message);
@@ -141,10 +130,10 @@ public class Deploy extends Service {
 				String key = properties.getProperty(name.substring(0, name.lastIndexOf('.')));
 
 				key = hash(file, key, cookie);
-				
+
 				if(event.session() != null)
 					event.session().put("cookie", cookie);
-				
+
 				if (key == null || !key.equals(pass)) {
 					file.delete();
 					throw new Exception("Pass verification failed. (" + name + "/" + key + ")");
@@ -162,27 +151,27 @@ public class Deploy extends Service {
 		}
 		else {
 			String key = hash(file, this.pass, cookie);
-			
+
 			if(event.session() != null)
 				event.session().put("cookie", cookie);
-			
+
 			if (!key.equals(pass)) {
 				file.delete();
 				throw new Failure("Pass verification failed. (" + pass + "/" + key + ")");
 			}
-			
+
 			if(Deploy.pass.equals("secret") && !event.remote().equals("127.0.0.1")) {
 				file.delete();
 				throw new Failure("Default pass 'secret' can only deploy from 127.0.0.1. (" + event.remote() + ")");
 			}
-			
+
 			cookie = null;
 		}
-		
+
 		/*
 		 * Deploy LOCAL
 		 */
-		
+
 		try {
 			event.reply().output().println("Application '" + deploy(event.daemon(), file, event) + "' deployed on '" + event.daemon().name() + "'.");
 		}
@@ -196,7 +185,7 @@ public class Deploy extends Service {
 			throw event;
 		}
 	}
-	
+
 	protected static String deploy(Daemon daemon, File file, Event event) throws Exception {
 		Archive archive = new Archive(daemon, file, event);
 
@@ -240,7 +229,7 @@ public class Deploy extends Service {
 			date = file.lastModified();
 
 			JarInputStream in = new JarInput(new FileInputStream(file));
-			
+
 			if(daemon.host) {
 				host = name.substring(0, name.lastIndexOf('.'));
 				String path = "app" + File.separator + host + File.separator;
@@ -256,6 +245,7 @@ public class Deploy extends Service {
 				permissions.add(new RuntimePermission("getClassLoader"));
 				permissions.add(new SSLPermission("setHostnameVerifier"));
 				permissions.add(new ReflectPermission("suppressAccessChecks"));
+				permissions.add(new SecurityPermission("insertProvider.SunJSSE"));
 				access = new AccessControlContext(new ProtectionDomain[] {
 						new ProtectionDomain(null, permissions)});
 				new File(path).mkdirs();
@@ -405,7 +395,7 @@ public class Deploy extends Service {
 		protected HashSet service() {
 			return service;
 		}
-		
+
 		public String toString() {
 			return name + " " + host + " " + date;
 		}
@@ -442,18 +432,18 @@ public class Deploy extends Service {
 			 * 
 			long past = file.lastModified();
 			long future = entry.getTime();
-			
+
 			if(file.exists()) {
 				System.out.println(file + " " + (past == future));
-				
+
 				if(past == future) {
 					return file;
 				}
 			}
-			*/
+			 */
 			file.createNewFile();
 			//file.setLastModified(future);
-			
+
 			OutputStream out = new FileOutputStream(file);
 
 			pipe(in, out);
@@ -551,14 +541,14 @@ public class Deploy extends Service {
 
 	static class Client {
 		private String cookie;
-		
+
 		InputStream send(URL url, File file, String pass) throws IOException {
 			return send(url, file, pass, false, true);
 		}
 
 		InputStream send(URL url, File file, String pass, boolean cluster, boolean chunk) throws IOException {
 			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-			
+
 			OutputStream out = null;
 			InputStream in = null;
 
@@ -567,12 +557,12 @@ public class Deploy extends Service {
 			}
 			else {
 				conn.setRequestMethod("POST");
-				
+
 				conn.addRequestProperty("File", file.getName());
 				conn.addRequestProperty("Size", "" + file.length());
 				conn.addRequestProperty("Cluster", "" + cluster);
 				conn.addRequestProperty("Cookie", cookie);
-				
+
 				if (pass != null) {
 					conn.addRequestProperty("Pass", pass);
 				}
@@ -597,7 +587,7 @@ public class Deploy extends Service {
 			if(file == null) {
 				cookie = conn.getHeaderField("Set-Cookie");
 			}
-			
+
 			if (code == 200) {
 				in = conn.getInputStream();
 			} else if (code < 0) {
@@ -612,7 +602,7 @@ public class Deploy extends Service {
 		public String cookie(URL url) throws IOException {
 			return toString(send(url, null, null, false, false));
 		}
-		
+
 		static String toString(InputStream in) throws IOException {
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 
@@ -674,11 +664,11 @@ public class Deploy extends Service {
 			// geez
 		}
 	}
-	
+
 	public static void deploy(String host, File file, String pass) throws IOException, NoSuchAlgorithmException {
 		deploy(host, file, pass, true);
 	}
-	
+
 	/**
 	 * The hash chain: file -> pass -> cookie = the man in the 
 	 * middle can read your deployment file but he cannot alter, 
@@ -696,7 +686,7 @@ public class Deploy extends Service {
 		//System.out.println(hash);
 		return hash;
 	}
-	
+
 	private static void deploy(String host, File file, String pass, boolean cluster) throws IOException, NoSuchAlgorithmException {
 		URL url = new URL("http://" + host + "/deploy");
 		Client client = new Client();
@@ -705,31 +695,31 @@ public class Deploy extends Service {
 		InputStream in = client.send(url, file, key, cluster, true);
 		System.out.println(new SimpleDateFormat("H:mm").format(new Date()));
 		Client.toStream(in, System.out);
-		
+
 		// test cookie reuse hack
 		//in = client.send(url, file, port, cluster, true);
 	}
-	
+
 	private static String hash(String hash) throws NoSuchAlgorithmException {
 		MessageDigest md = MessageDigest.getInstance("SHA-256");
 		md.update(hash.getBytes(), 0, hash.length());
 		return new BigInteger(1, md.digest()).toString(16);
 	}
-	
+
 	private static String hash(File file) throws NoSuchAlgorithmException, FileNotFoundException, IOException {
-	    MessageDigest md = MessageDigest.getInstance("SHA-256");
-	    InputStream in = new FileInputStream(file);
-	    int n = 0;
-	    byte[] buffer = new byte[8192];
-	    while (n != -1) {
-	        n = in.read(buffer);
-	        if (n > 0) {
-	            md.update(buffer, 0, n);
-	        }
-	    }
-	    return new BigInteger(1, md.digest()).toString(16);
+		MessageDigest md = MessageDigest.getInstance("SHA-256");
+		InputStream in = new FileInputStream(file);
+		int n = 0;
+		byte[] buffer = new byte[8192];
+		while (n != -1) {
+			n = in.read(buffer);
+			if (n > 0) {
+				md.update(buffer, 0, n);
+			}
+		}
+		return new BigInteger(1, md.digest()).toString(16);
 	}
-	
+
 	public static void main(String[] args) {
 		if (args.length > 2) {
 			try {
