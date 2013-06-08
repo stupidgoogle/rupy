@@ -679,12 +679,13 @@ public class Deploy extends Service {
 	 * deploy or re-deploy it!<br>
 	 * <br>
 	 * Basically: don't put passwords in clear text in the deployment 
-	 * jar and you will be fine! To get your password on <i>host.rupy.se</i>
-	 * call {@link Daemon#send(Object message)} with "{"type": "password"}"
+	 * jar and you will be fine! To get your host, pass and database IP on <i>host.rupy.se</i>
+	 * call {@link Daemon#send(Object message)} with "{"type": "account"}"
 	 * like so:
 <tt><br><br>
-&nbsp;&nbsp;&nbsp;&nbsp;String password = (String) daemon.send("{\"type\": \"password\"}");<br>
+&nbsp;&nbsp;&nbsp;&nbsp;String account = (String) daemon.send("{\"type\": \"account\"}");<br>
 <br></tt>
+	 * It returns something like: "{"host": "xxx", "pass": "xxx", "ip": "xxx"}"
 	 */
 	public static String hash(File file, String pass, String cookie) throws NoSuchAlgorithmException, FileNotFoundException, IOException {
 		String hash = hash(file);
