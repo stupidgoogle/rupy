@@ -88,7 +88,9 @@ public class Query extends Hash {
 			}
 		}
 
-		if(header("head") != null) {
+		String accept = header("accept");
+		
+		if(header("head") != null || (accept != null && accept.equals("text/event-stream"))) {
 			input.event().headless = true;
 		}
 		else {

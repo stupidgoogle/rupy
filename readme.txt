@@ -316,5 +316,7 @@ VERSION:
     
     - Added so you can get your database password 
       from the domain controller on host cluster.
+    - Added Head: less (no session and less response 
+      headers) to Content-Type: text/event-stream
         
 have fun!

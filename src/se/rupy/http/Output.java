@@ -15,6 +15,7 @@ public abstract class Output extends OutputStream implements Event.Block {
 	private final static byte[] close = ("Connection: Close" + EOL).getBytes();
 	private final static byte[] alive = ("Connection: Keep-Alive" + EOL).getBytes();
 	private final static byte[] chunked = ("Transfer-Encoding: Chunked" + EOL).getBytes();
+	private final static byte[] stream = ("Content-Type: text/event-stream" + EOL).getBytes(); 
 
 	private byte[] one = new byte[1];
 	protected int length, size;
@@ -131,7 +132,12 @@ public abstract class Output extends OutputStream implements Event.Block {
 		wrote((reply.event().query().version() + " " + reply.code() + EOL)
 				.getBytes());
 
-		if(!reply.event().headless) {
+		if(reply.event().headless) {
+			if(reply.type().equals("text/event-stream")) {
+				wrote(stream);
+			}
+		}
+		else {
 			wrote(("Date: " + reply.event().worker().date().format(new Date()) + EOL)
 					.getBytes());
 			wrote(server);
@@ -184,7 +190,7 @@ public abstract class Output extends OutputStream implements Event.Block {
 			} else {
 				wrote(alive);
 			}
-
+			
 			HashMap headers = reply.headers();
 
 			if (headers != null) {
@@ -193,7 +199,7 @@ public abstract class Output extends OutputStream implements Event.Block {
 				while (it.hasNext()) {
 					String name = (String) it.next();
 					String value = (String) reply.headers().get(name);
-
+					
 					wrote((name + ": " + value + EOL).getBytes());
 				}
 			}
