@@ -432,21 +432,18 @@ public class Deploy extends Service {
 			new File(root + path).mkdirs();
 
 			File file = new File(root + name);
-			/* why doesent zip archives preserve dates?
-			 * 
+
 			long past = file.lastModified();
 			long future = entry.getTime();
 
 			if(file.exists()) {
-				System.out.println(file + " " + (past == future));
-
 				if(past == future) {
 					return file;
 				}
 			}
-			 */
+
 			file.createNewFile();
-			//file.setLastModified(future);
+			file.setLastModified(future);
 
 			OutputStream out = new FileOutputStream(file);
 

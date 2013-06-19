@@ -342,17 +342,19 @@ public class Event extends Throwable implements Chain.Link {
 				log((interest == READ ? "read" : "write") + " prereg " + interest
 						+ " " + key.interestOps() + " " + key.readyOps(), DEBUG);
 			}
+			
 			key = channel.register(key.selector(), interest, this);
+			
 			if (Event.LOG) {
 				log((interest == READ ? "read" : "write") + " postreg " + interest
 						+ " " + key.interestOps() + " " + key.readyOps(), DEBUG);
 			}
-		}
-
-		key.selector().wakeup();
-
-		if (Event.LOG) {
-			log((interest == READ ? "read" : "write") + " wakeup", DEBUG);
+			
+			key.selector().wakeup();
+			
+			//if (Event.LOG) {
+			//	log((interest == READ ? "read" : "write") + " wakeup", DEBUG);
+			//}
 		}
 	}
 
@@ -422,12 +424,12 @@ public class Event extends Throwable implements Chain.Link {
 			
 			Thread.yield();
 			worker.snooze(10);
-			key.selector().wakeup();
+			//key.selector().wakeup();
 		}
 
 		String agent = query.header("user-agent");
 
-		throw new Exception("IO timeout. (" + daemon.delay + ")");
+		throw new Exception("IO timeout. (" + daemon.delay + ", " + agent + ")");
 	}
 
 	/**
