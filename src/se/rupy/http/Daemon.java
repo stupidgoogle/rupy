@@ -25,12 +25,13 @@ import java.nio.channels.*;
  */
 
 public class Daemon implements Runnable {
+	static DateFormat DATE;
+	
 	private int selected, valid, accept, readwrite; // panel stats
 	private HashMap archive, service;
 	private Heart heart;
 	private Selector selector;
 	private String domain, name;
-	private static DateFormat DATE;
 
 	Chain workers, queue;
 	Properties properties;

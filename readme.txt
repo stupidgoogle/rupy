@@ -318,5 +318,7 @@ VERSION:
       from the domain controller on host cluster.
     - Added Head: less (no session and less response 
       headers) to Content-Type: text/event-stream
+    - Fixed deployment archive date so old resources
+      no longer break the cache.
         
 have fun!

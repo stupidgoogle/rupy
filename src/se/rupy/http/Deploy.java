@@ -443,8 +443,7 @@ public class Deploy extends Service {
 			}
 
 			file.createNewFile();
-			file.setLastModified(future);
-
+						
 			OutputStream out = new FileOutputStream(file);
 
 			pipe(in, out);
@@ -452,6 +451,8 @@ public class Deploy extends Service {
 			out.flush();
 			out.close();
 
+			file.setLastModified(future);
+			
 			return file;
 		}
 
