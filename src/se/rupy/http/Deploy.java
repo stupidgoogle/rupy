@@ -430,18 +430,7 @@ public class Deploy extends Service {
 			String root = Deploy.path + host;
 
 			new File(root + path).mkdirs();
-
 			File file = new File(root + name);
-
-			long past = file.lastModified();
-			long future = entry.getTime();
-
-			if(file.exists()) {
-				if(past == future) {
-					return file;
-				}
-			}
-
 			file.createNewFile();
 						
 			OutputStream out = new FileOutputStream(file);
@@ -451,7 +440,7 @@ public class Deploy extends Service {
 			out.flush();
 			out.close();
 
-			file.setLastModified(future);
+			file.setLastModified(entry.getTime());
 			
 			return file;
 		}
