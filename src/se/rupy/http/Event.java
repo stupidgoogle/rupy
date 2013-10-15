@@ -224,6 +224,11 @@ public class Event extends Throwable implements Chain.Link {
 			disconnect(null);
 		}
 
+		if(query.policy()) {
+			reply.policy();
+			disconnect(new Exception("policy"));
+		}
+		
 		remote = address();
 
 		if (query.version() == null || !query.version().equalsIgnoreCase("HTTP/1.1")) {

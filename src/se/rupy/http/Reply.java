@@ -180,6 +180,10 @@ public class Reply {
 		output.init(length);
 		return output;
 	}
+	
+	protected void policy() throws IOException {
+		output.policy();
+	}
 
 	/**
 	 * To send data asynchronously, call this and the event will be re-filtered.

@@ -134,6 +134,10 @@ public abstract class Input extends InputStream implements Event.Block {
 
 			int a = real();
 
+			if (a == '\0') {
+				return buffer.toString();
+			}
+			
 			if (a == '\r') {
 				int b = real();
 

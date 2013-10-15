@@ -68,6 +68,11 @@ public abstract class Output extends OutputStream implements Event.Block {
 		write(String.valueOf(b).getBytes("UTF-8"));
 	}
 
+	protected void policy() throws IOException {
+		wrote("<cross-domain-policy><allow-access-from domain=\"*\" to-ports=\"*\"/></cross-domain-policy>\0".getBytes());
+		flush();
+	}
+	
 	protected void init(long length) throws IOException {
 		if (init) {
 			if (Event.LOG) {

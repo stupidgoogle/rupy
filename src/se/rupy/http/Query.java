@@ -18,7 +18,7 @@ public class Query extends Hash {
 	private Input input;
 	private int method;
 	private long length, modified;
-	private boolean done, parsed;
+	private boolean done, parsed, policy;
 
 	protected Query(Event event) throws IOException {
 		headers = new HashMap();
@@ -34,6 +34,13 @@ public class Query extends Hash {
 			line = input.line();
 		}
 
+		//System.out.println(line + " " + line.equals("<policy-file-request/>"));
+		
+		if(line.equals("<policy-file-request/>")) {
+			policy = true;
+			return true;
+		}
+		
 		StringTokenizer http = new StringTokenizer(line, " ");
 		String method = http.nextToken();
 
@@ -202,6 +209,10 @@ public class Query extends Hash {
 		modified = 0;
 	}
 
+	public boolean policy() {
+		return policy;
+	}
+	
 	public int method() {
 		return method;
 	}
