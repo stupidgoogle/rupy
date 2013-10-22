@@ -320,5 +320,7 @@ VERSION:
       headers) to Content-Type: text/event-stream
     - Fixed deployment archive date so old resources
       no longer break the cache.
+    - Added Flash <policy-file-request/> handling.
+    - Enable TCP no delay for headless sockets.
         
 have fun!

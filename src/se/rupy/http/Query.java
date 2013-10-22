@@ -99,6 +99,8 @@ public class Query extends Hash {
 		
 		if(header("head") != null || (accept != null && accept.equals("text/event-stream"))) {
 			input.event().headless = true;
+			input.event().channel().socket().setTcpNoDelay(true);
+			input.event().channel().socket().setKeepAlive(true);
 		}
 		else {
 			String encoding = header("transfer-encoding");
