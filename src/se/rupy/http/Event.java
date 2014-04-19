@@ -435,7 +435,7 @@ public class Event extends Throwable implements Chain.Link {
 
 		String agent = query.header("user-agent");
 
-		throw new Exception("IO timeout. (" + daemon.delay + ", " + agent + ")");
+		throw new Exception("IO timeout. (" + interest + ", " + daemon.delay + ", " + agent + ")");
 	}
 
 	/**
@@ -484,7 +484,7 @@ public class Event extends Throwable implements Chain.Link {
 		}
 	}
 
-	protected final void session(final Service service) throws Exception {
+	protected final void session(final Service service, Event event) throws Exception {
 		String key = cookie(query.header("cookie"), "key");
 /*
 		if(key == null && query.method() == Query.GET) {
@@ -528,7 +528,7 @@ public class Event extends Throwable implements Chain.Link {
 		}
 
 		if(index == 0 && !push()) {
-			session = new Session(daemon);
+			session = new Session(daemon, event.query().header("host"));
 			session.add(service);
 			session.add(this);
 			session.key(key);

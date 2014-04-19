@@ -14,10 +14,10 @@ public class Session extends Hash {
 	private Chain service;
 	private Chain event;
 	private boolean set;
-	private String key, domain;
+	private String key, domain, host;
 	private long date, expires;
 
-	protected Session(Daemon daemon) {
+	protected Session(Daemon daemon, String host) {
 		this.daemon = daemon;
 
 		service = new Chain();

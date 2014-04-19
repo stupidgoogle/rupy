@@ -322,5 +322,12 @@ VERSION:
       no longer break the cache.
     - Added Flash <policy-file-request/> handling.
     - Enable TCP no delay for headless sockets.
-        
+    
+    1.2 Fixes
+    
+    - Catches UDP multicast receive Exceptions.
+    - Allow access to individual cluster nodes for any domain:
+      So now one.project.domain.com can be pointed to cluster 
+      node one and the project.domain.com deploy will reply.
+    
 have fun!

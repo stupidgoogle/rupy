@@ -26,7 +26,7 @@ import java.nio.channels.*;
 
 public class Daemon implements Runnable {
 	static DateFormat DATE;
-	
+
 	private int selected, valid, accept, readwrite; // panel stats
 	private HashMap archive, service;
 	private Heart heart;
@@ -240,10 +240,10 @@ public class Daemon implements Runnable {
 				return "unavailable";
 			}
 		}
-		
+
 		return name;
 	}
-	
+
 	public Properties properties() {
 		return properties;
 	}
@@ -269,7 +269,7 @@ public class Daemon implements Runnable {
 				if(!errlis.log(e, t))
 					return;
 			}
-			
+
 			Calendar date = Calendar.getInstance();
 			StringBuilder b = new StringBuilder();
 
@@ -388,6 +388,10 @@ public class Daemon implements Runnable {
 		return session;
 	}
 
+	public int online() {
+		return session.size();
+	}
+
 	protected Selector selector() {
 		return selector;
 	}
@@ -455,11 +459,18 @@ public class Daemon implements Runnable {
 			Deploy.Archive archive = (Deploy.Archive) this.archive.get(name);
 
 			if(archive == null) {
-				return (Deploy.Archive) this.archive.get("www." + name);
+				archive = (Deploy.Archive) this.archive.get("www." + name);
+				
+				if(archive == null) {
+					String base = name.substring(name.indexOf('.') + 1, name.length());
+
+					//System.out.println(base);
+
+					archive = (Deploy.Archive) this.archive.get(base);
+				}
 			}
-			else {
-				return archive;
-			}
+			
+			return archive;
 		}
 		else {
 			return (Deploy.Archive) this.archive.get(name);
@@ -469,7 +480,7 @@ public class Daemon implements Runnable {
 	private Listener listener;
 	private Chain listeners;
 	private ErrorListener errlis;
-	
+
 	/**
 	 * Send Object to JVM listener. We recommend you only send bootclasspath loaded 
 	 * classes here otherwise hotdeploy will fail.
@@ -514,7 +525,7 @@ public class Daemon implements Runnable {
 		catch(IOException e) {
 			// if passport could not be created
 		}
-		
+
 		return false;
 	}
 
@@ -565,7 +576,7 @@ public class Daemon implements Runnable {
 		 */
 		public boolean log(Event e, Throwable t);
 	}
-	
+
 	/**
 	 * Listens for errors.
 	 * @return true if successful.
@@ -593,10 +604,10 @@ public class Daemon implements Runnable {
 		catch(IOException e) {
 			// if passport could not be created
 		}
-		
+
 		return false;
 	}
-	
+
 	/**
 	 * Send inter-cluster-node UDP multicast message.
 	 * @param tail your payload.
@@ -610,31 +621,31 @@ public class Daemon implements Runnable {
 			if(name == null) {
 				name = domain + ".jar";
 			}
-			
+
 			String[] reverse = name.split("\\.");
 			StringBuilder header = new StringBuilder();
 
 			for(int i = reverse.length - 2; i > -1; i--) {
 				header.append(reverse[i]);
-				
+
 				if(i > 0) {
 					header.append('.');
 				}
 			}
-			
+
 			header.append("." + name());
-			
+
 			byte[] head = header.toString().getBytes();
-			
+
 			if(head.length + tail.length > 256) {
 				throw new Exception("Message is too long (" + header + " " + tail.length + ").");
 			}
 
 			byte[] data = new byte[head.length + tail.length];
-			
+
 			System.arraycopy(head, 0, data, 0, head.length);
 			System.arraycopy(tail, 0, data, head.length, tail.length);
-			
+
 			socket.send(new DatagramPacket(data, data.length, address, 8888));
 		}
 	}
@@ -676,24 +687,32 @@ public class Daemon implements Runnable {
 					byte[] empty = new byte[256];
 					byte[] data = new byte[256];
 					DatagramPacket packet = new DatagramPacket(data, data.length);
-					
+
 					while (true) {
 						socket.receive(packet);
 
+						//System.out.println(packet.getAddress() + " " + packet.getLength());
+
 						String message = "{\"type\": \"packet\", \"from\": \"" + packet.getAddress() + "\"}";
 						String ok = (String) send(message);
-						
+
 						if(ok.equals("OK")) {
 							synchronized (listeners) {
 								Iterator it = listeners.iterator();
 
 								while(it.hasNext()) {
 									ClusterListener listener = (ClusterListener) it.next();
-									listener.receive(data);
+
+									try {
+										listener.receive(data);
+									}
+									catch(Exception e) {
+										e.printStackTrace();
+									}
 								}
 							}
 						}
-						
+
 						System.arraycopy(empty, 0, data, 0, 256);
 					}
 				}
@@ -871,11 +890,11 @@ public class Daemon implements Runnable {
 			if(file.exists() && !file.isDirectory()) {
 				return new Deploy.Big(file);
 			}
-			
+
 			try {
 				String message = "{\"type\": \"host\", \"file\": \"" + host + ".jar\"}";
 				String ok = (String) send(message);
-				
+
 				if(ok.equals("OK")) {
 					file = new File("app" + File.separator + domain + path);
 
@@ -926,18 +945,28 @@ public class Daemon implements Runnable {
 					archive = (Deploy.Archive) this.archive.get("www." + host + ".jar");
 				}
 
-				try {
-					String message = "{\"type\": \"host\", \"file\": \"" + host + ".jar\"}";
-					String ok = (String) send(message);
+				if(archive == null) {
+					String base = host.substring(host.indexOf('.') + 1, host.length());
 
-					if(ok.equals("OK")) {
-						archive = (Deploy.Archive) this.archive.get(domain + ".jar");
+					//System.out.println(base);
+
+					archive = (Deploy.Archive) this.archive.get(base + ".jar");
+
+					if(archive == null) {
+						try {
+							String message = "{\"type\": \"host\", \"file\": \"" + host + ".jar\"}";
+							String ok = (String) send(message);
+
+							if(ok.equals("OK")) {
+								archive = (Deploy.Archive) this.archive.get(domain + ".jar");
+							}
+						}
+						catch(Exception e) {
+							e.printStackTrace();
+						}
 					}
 				}
-				catch(Exception e) {
-					e.printStackTrace();
-				}
-				
+
 				if(archive != null) {
 					Chain chain = (Chain) archive.chain().get(path);
 
@@ -1016,13 +1045,13 @@ public class Daemon implements Runnable {
 
 				File[] app = new File(Deploy.path).listFiles(new Filter());
 				File domain = null;
-				
+
 				if (app != null) {
 					if(host) {
 						domain = new File("app" + File.separator + this.domain + ".jar");
 						Deploy.deploy(this, domain, null);
 					}
-					
+
 					for (int i = 0; i < app.length; i++) {
 						try {
 							if(host) {
