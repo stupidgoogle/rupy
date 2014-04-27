@@ -237,7 +237,12 @@ public class Event extends Throwable implements Chain.Link {
 		}
 		else {
 			if(!service(daemon.chain(query))) {
-				if(!content()) {
+				if(daemon.host && query.path().startsWith("/root/")) {
+					reply.code("403 Forbidden");
+					reply.output().print(
+							"<pre>'" + query.path() + "' is forbidden.</pre>");
+				}
+				else if(!content()) {
 					if(!service(daemon.chain("null"))) {
 						reply.code("404 Not Found");
 						reply.output().print(

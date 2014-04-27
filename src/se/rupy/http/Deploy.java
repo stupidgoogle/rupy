@@ -440,6 +440,7 @@ public class Deploy extends Service {
 			out.flush();
 			out.close();
 
+			//System.out.println(name + " " + new Date(entry.getTime()));
 			file.setLastModified(entry.getTime());
 			
 			return file;

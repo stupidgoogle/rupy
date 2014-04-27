@@ -329,5 +329,7 @@ VERSION:
     - Allow access to individual cluster nodes for any domain:
       So now one.project.domain.com can be pointed to cluster 
       node one and the project.domain.com deploy will reply.
+    - All request paths that starts with "/root/" are now forbidden 
+      in hosted mode.
     
 have fun!
