@@ -891,6 +891,16 @@ public class Daemon implements Runnable {
 				return new Deploy.Big(file);
 			}
 
+			String base = host.substring(host.indexOf('.') + 1, host.length());
+
+			//System.out.println(base);
+
+			file = new File("app" + File.separator + base + File.separator + path);
+
+			if(file.exists() && !file.isDirectory()) {
+				return new Deploy.Big(file);
+			}
+			
 			try {
 				String message = "{\"type\": \"host\", \"file\": \"" + host + ".jar\"}";
 				String ok = (String) send(message);
