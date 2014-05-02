@@ -38,8 +38,8 @@ public class Event extends Throwable implements Chain.Link {
 	static int VERBOSE = 1 << 0;
 	static int DEBUG = 1 << 1;
 
-	private static char[] BASE_24 = { 'B', 'C', 'D', 'F', 'G', 'H', 'J', 'K',
-		'M', 'P', 'Q', 'R', 'T', 'V', 'W', 'X', 'Y', '2', '3', '4', '6',
+	private static char[] BASE_24 = { 'b', 'c', 'd', 'f', 'g', 'h', 'j', 'k',
+		'm', 'p', 'q', 'r', 't', 'v', 'w', 'x', 'y', '2', '3', '4', '6',
 		'7', '8', '9' };
 
 	static Mime MIME;
