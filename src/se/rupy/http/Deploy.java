@@ -89,8 +89,8 @@ public class Deploy extends Service {
 		}
 
 		if (Deploy.pass == null) {
-			if(size != null && size.length() > 0 && Integer.parseInt(size) > 1048576) {
-				throw new Exception("Maximum deployable size is 1MB. To deploy resources use .zip extension, total limit is 10MB!");
+			if(size != null && size.length() > 0 && Integer.parseInt(size) > 10485760) {
+				throw new Exception("Maximum deployable size is 10MB. To deploy resources use .zip extension, total limit is 10MB!");
 			}
 		}
 		else {
@@ -108,7 +108,7 @@ public class Deploy extends Service {
 		InputStream in = event.query().input();
 
 		try {
-			pipe(in, out, 1024, Deploy.pass == null ? 1048576 : 104857600); // 1MB limit OR 100MB limit
+			pipe(in, out, 1024, Deploy.pass == null ? 10485760 : 104857600); // 10MB limit OR 100MB limit
 		}
 		catch(IOException e) {
 			file.delete();

@@ -615,9 +615,15 @@ public class Daemon implements Runnable {
 	 */
 	public void broadcast(byte[] tail) throws Exception {
 		if(socket != null) {
-			Deploy.Archive archive = (Deploy.Archive) Thread.currentThread().getContextClassLoader();
+			ClassLoader loader = Thread.currentThread().getContextClassLoader();
+			
+			if(!(loader instanceof Deploy.Archive)) {
+				throw new Exception("You can only broadcast from worker threads!");
+			}
+			
+			Deploy.Archive archive = (Deploy.Archive) loader;
 			String name = archive.name();
-
+			
 			if(name == null) {
 				name = domain + ".jar";
 			}
@@ -945,6 +951,9 @@ public class Daemon implements Runnable {
 
 		if(!this.host) {
 			host = "content";
+		}
+		else if(host == null) {
+			return null;
 		}
 
 		synchronized (this.archive) {
