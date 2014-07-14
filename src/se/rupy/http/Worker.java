@@ -145,17 +145,17 @@ public class Worker implements Runnable, Chain.Link {
 			lock = (int) (System.currentTimeMillis() - touch);
 
 			if(lock > daemon.delay) {
-				//try {
-				//	daemon.error.write(stack(thread).getBytes());
-				//}
-				//catch (IOException e) {}
+				try {
+					daemon.error.write(stack(thread).getBytes());
+				}
+				catch (IOException e) {}
 				
 				reset(new Exception("Threadlock"));
 
-				if(exit) {
-					System.err.println("Rupy stopped for debugging!");
-					System.exit(-1);
-				}
+				//if(exit) {
+				//	System.err.println("Rupy stopped for debugging!");
+				//	System.exit(-1);
+				//}
 
 				//event = null;
 				return false;

@@ -331,5 +331,9 @@ VERSION:
       node one and the project.domain.com deploy will reply.
     - All request paths that starts with "/root/" are now forbidden 
       in hosted mode.
+    - Allow for apps to modify http headers so we no longer are slave 
+      to the DNS crap.
+    - Uninstantiable services now complain upon hot-deploy.
+    - Threadlock prints stacktrace.
     
 have fun!
