@@ -622,6 +622,8 @@ public class Daemon implements Runnable {
 			}
 			
 			Deploy.Archive archive = (Deploy.Archive) loader;
+			
+			/* Why? There was some weird onion shell filter plan...
 			String name = archive.name();
 			
 			if(name == null) {
@@ -640,11 +642,11 @@ public class Daemon implements Runnable {
 			}
 
 			header.append("." + name());
-
-			byte[] head = header.toString().getBytes();
+			 */
+			byte[] head = (name() + "." + archive.host()).getBytes();
 
 			if(head.length + tail.length > 256) {
-				throw new Exception("Message is too long (" + header + " " + tail.length + ").");
+				throw new Exception("Message is too long (" + archive.host() + " " + tail.length + ").");
 			}
 
 			byte[] data = new byte[head.length + tail.length];
