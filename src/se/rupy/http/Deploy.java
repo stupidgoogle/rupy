@@ -251,6 +251,7 @@ public class Deploy extends Service {
 				permissions.add(new ReflectPermission("suppressAccessChecks"));
 				permissions.add(new SecurityPermission("insertProvider.SunJSSE"));
 				permissions.add(new PropertyPermission("sun.net.http.allowRestrictedHeaders", "write"));
+				permissions.add(new RuntimePermission("getStackTrace"));
 				access = new AccessControlContext(new ProtectionDomain[] {
 						new ProtectionDomain(null, permissions)});
 				new File(path).mkdirs();

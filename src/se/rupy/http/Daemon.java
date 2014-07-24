@@ -460,7 +460,7 @@ public class Daemon implements Runnable {
 
 			if(archive == null) {
 				archive = (Deploy.Archive) this.archive.get("www." + name);
-				
+
 				if(archive == null) {
 					String base = name.substring(name.indexOf('.') + 1, name.length());
 
@@ -469,7 +469,7 @@ public class Daemon implements Runnable {
 					archive = (Deploy.Archive) this.archive.get(base);
 				}
 			}
-			
+
 			return archive;
 		}
 		else {
@@ -616,16 +616,16 @@ public class Daemon implements Runnable {
 	public void broadcast(byte[] tail) throws Exception {
 		if(socket != null) {
 			ClassLoader loader = Thread.currentThread().getContextClassLoader();
-			
+
 			if(!(loader instanceof Deploy.Archive)) {
 				throw new Exception("You can only broadcast from worker threads!");
 			}
-			
+
 			Deploy.Archive archive = (Deploy.Archive) loader;
-			
+
 			/* Why? There was some weird onion shell filter plan...
 			String name = archive.name();
-			
+
 			if(name == null) {
 				name = domain + ".jar";
 			}
@@ -699,12 +699,10 @@ public class Daemon implements Runnable {
 					while (true) {
 						socket.receive(packet);
 
-						//System.out.println(packet.getAddress() + " " + packet.getLength());
+						//String message = "{\"type\": \"packet\", \"from\": \"" + packet.getAddress() + "\"}";
+						//String ok = (String) send(message);
 
-						String message = "{\"type\": \"packet\", \"from\": \"" + packet.getAddress() + "\"}";
-						String ok = (String) send(message);
-
-						if(ok.equals("OK")) {
+						//if(ok.equals("OK")) {
 							synchronized (listeners) {
 								Iterator it = listeners.iterator();
 
@@ -719,7 +717,7 @@ public class Daemon implements Runnable {
 									}
 								}
 							}
-						}
+						//}
 
 						System.arraycopy(empty, 0, data, 0, 256);
 					}
@@ -908,7 +906,7 @@ public class Daemon implements Runnable {
 			if(file.exists() && !file.isDirectory()) {
 				return new Deploy.Big(file);
 			}
-			
+
 			try {
 				String message = "{\"type\": \"host\", \"file\": \"" + host + ".jar\"}";
 				String ok = (String) send(message);
