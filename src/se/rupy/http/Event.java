@@ -491,15 +491,16 @@ public class Event extends Throwable implements Chain.Link {
 
 	protected final void session(final Service service, Event event) throws Exception {
 		String key = cookie(query.header("cookie"), "key");
-/*
+
 		if(key == null && query.method() == Query.GET) {
 			// XSS comet cookie: this means first GETs are parsed!
 			// TODO: This should be removed because you can use a P3P header to fix this, go figure!
+			// UNDO: Apparently Apple decided to go back in time and mess XSS up!
 			query.parse();
 			String cookie = query.string("cookie");
 			key = cookie.length() > 0 ? cookie : null;
 		}
-*/
+
 		if (key != null) {
 			session = (Session) daemon.session().get(key);
 
