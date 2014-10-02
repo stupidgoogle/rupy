@@ -703,20 +703,20 @@ public class Daemon implements Runnable {
 						//String ok = (String) send(message);
 
 						//if(ok.equals("OK")) {
-							synchronized (listeners) {
-								Iterator it = listeners.iterator();
+						synchronized (listeners) {
+							Iterator it = listeners.iterator();
 
-								while(it.hasNext()) {
-									ClusterListener listener = (ClusterListener) it.next();
+							while(it.hasNext()) {
+								ClusterListener listener = (ClusterListener) it.next();
 
-									try {
-										listener.receive(data);
-									}
-									catch(Exception e) {
-										e.printStackTrace();
-									}
+								try {
+									listener.receive(data);
+								}
+								catch(Exception e) {
+									e.printStackTrace();
 								}
 							}
+						}
 						//}
 
 						System.arraycopy(empty, 0, data, 0, 256);
@@ -1095,31 +1095,53 @@ public class Daemon implements Runnable {
 
 			if(panel) {
 				add(new Service() {
+					int width = 100;
+
 					public String path() { return "/panel"; }
 					public void filter(Event event) throws Event, Exception {
 						Iterator it = workers.iterator();
-						event.output().println("<pre>workers: {size: " + workers.size() + ", ");
+						Output out = event.output();
+						out.println("<pre>");
+						out.println("Workers<br>");
+						out.println("<table><tr><td width=\"" + width + "\">id</td><td width=\"" + width + "\">busy</td><td width=\"" + width + "\">lock</td><td width=\"" + width + "\">event</td></tr>");
 						while(it.hasNext()) {
 							Worker worker = (Worker) it.next();
-							event.output().print(" worker: {index: " + worker.index() + ", busy: " + worker.busy() + ", lock: " + worker.lock());
-
-							if(worker.event() != null) {
-								event.output().println(", ");
-								event.output().println("  event: {index: " + worker.event().index() + ", init: " + worker.event().reply().output.init + ", done: " + worker.event().reply().output.done + "}");
-								event.output().println(" }");
-							}
-							else {
-								event.output().println("}");
-							}
+							out.println("<tr><td>" + worker.index() + "</td><td>" + worker.busy() + "</td><td>" + worker.lock() + "</td><td>" + (worker.event() == null ? "" : "" + worker.event().index()) + "</td></tr>");
 						}
-						event.output().println("}");
-						event.output().println("events: {size: " + events.size() + ", selected: " + selected + ", valid: " + valid + ", accept: " + accept + ", readwrite: " + readwrite + ", ");
+						out.println("</table>");
+						out.println("Events (selected: " + selected + ", valid: " + valid + ", accept: " + accept + ", readwrite: " + readwrite + ")<br>");
 						it = events.values().iterator();
+						out.println("<table><tr><td width=\"" + width + "\">id</td><td width=\"" + width + "\">init</td><td width=\"" + width + "\">push</td><td width=\"" + width + "\">done</td><td width=\"" + width + "\">last</td><td width=\"" + width + "\">worker</td></tr>");
 						while(it.hasNext()) {
 							Event e = (Event) it.next();
-							event.output().println(" event: {index: " + e.index() + ", push: " + e.push() + ", worker: " + (e.worker() == null ? "null" : "" + e.worker().index()) + ", last: " + (System.currentTimeMillis() - e.last()) + "}");
+							out.println("<tr><td>" + e.index() + "</td><td>" + e.reply().output.init + "</td><td>" + e.push() + "</td><td>" + e.reply().output.done + "</td><td>" + (System.currentTimeMillis() - e.last()) + "</td><td>" + (e.worker() == null ? "" : "" + e.worker().index()) + "</td></tr>");
 						}
-						event.output().println("}</pre>");
+						out.println("</table>");
+						out.println("</pre>");
+					}
+				});
+
+				add(new Service() {
+					public String path() { return "/api"; }
+					public void filter(Event event) throws Event, Exception {
+						Iterator it = archive.values().iterator();
+						Output out = event.output();
+						out.println("<pre>");
+						while(it.hasNext()) {
+							Deploy.Archive archive = (Deploy.Archive) it.next();
+							boolean host = !archive.host().equals("content");
+							String title = host ? archive.host() : archive.name();
+							out.println("- " + title);
+
+							Iterator it2 = archive.chain().keySet().iterator();
+							while(it2.hasNext()) {
+								String path = (String) it2.next();
+								
+								if(path.startsWith("/") && path.length() > 1)
+									out.println("    <a href=\"" + (host ? "http://" + title : "") + path + "\">" + path + "</a>");
+							}
+						}
+						event.output().println("</pre>");
 					}
 				});
 			}
