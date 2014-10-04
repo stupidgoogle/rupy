@@ -1095,28 +1095,34 @@ public class Daemon implements Runnable {
 
 			if(panel) {
 				add(new Service() {
-					int width = 100;
-
 					public String path() { return "/panel"; }
 					public void filter(Event event) throws Event, Exception {
-						Iterator it = workers.iterator();
+						int width = 50;
+						
 						Output out = event.output();
 						out.println("<pre>");
-						out.println("Workers<br>");
-						out.println("<table><tr><td width=\"" + width + "\">id</td><td width=\"" + width + "\">busy</td><td width=\"" + width + "\">lock</td><td width=\"" + width + "\">event</td></tr>");
-						while(it.hasNext()) {
-							Worker worker = (Worker) it.next();
-							out.println("<tr><td>" + worker.index() + "</td><td>" + worker.busy() + "</td><td>" + worker.lock() + "</td><td>" + (worker.event() == null ? "" : "" + worker.event().index()) + "</td></tr>");
-						}
-						out.println("</table>");
-						out.println("Events (selected: " + selected + ", valid: " + valid + ", accept: " + accept + ", readwrite: " + readwrite + ")<br>");
-						it = events.values().iterator();
+						out.println("<table><tr><td align=\"center\">Event</td><td></td><td align=\"center\">Worker</td></tr><tr><td valign=\"top\">");
+						
+						Iterator it = events.values().iterator();
 						out.println("<table><tr><td width=\"" + width + "\">id</td><td width=\"" + width + "\">init</td><td width=\"" + width + "\">push</td><td width=\"" + width + "\">done</td><td width=\"" + width + "\">last</td><td width=\"" + width + "\">worker</td></tr>");
+						out.println("<tr><td colspan=\"6\" bgcolor=\"#000\"></td></tr>");
 						while(it.hasNext()) {
 							Event e = (Event) it.next();
-							out.println("<tr><td>" + e.index() + "</td><td>" + e.reply().output.init + "</td><td>" + e.push() + "</td><td>" + e.reply().output.done + "</td><td>" + (System.currentTimeMillis() - e.last()) + "</td><td>" + (e.worker() == null ? "" : "" + e.worker().index()) + "</td></tr>");
+							out.println("<tr><td>" + e.index() + "</td><td>" + (e.reply().output.init ? "1" : "0") + "</td><td>" + (e.push() ? "1" : "0") + "</td><td>" + (e.reply().output.done ? "1" : "0") + "</td><td>" + (System.currentTimeMillis() - e.last()) + "</td><td>" + (e.worker() == null ? "" : "" + e.worker().index()) + "</td></tr>");
 						}
 						out.println("</table>");
+						
+						out.println("</td><td></td><td valign=\"top\">");
+						
+						out.println("<table><tr><td width=\"" + width + "\">id</td><td width=\"" + width + "\">busy</td><td width=\"" + width + "\">lock</td><td width=\"" + width + "\">event</td></tr>");
+						out.println("<tr><td colspan=\"4\" bgcolor=\"#000\"></td></tr>");
+						it = workers.iterator();
+						while(it.hasNext()) {
+							Worker worker = (Worker) it.next();
+							out.println("<tr><td>" + worker.index() + "</td><td>" + (worker.busy() ? "1" : "0") + "</td><td>" + worker.lock() + "</td><td>" + (worker.event() == null ? "" : "" + worker.event().index()) + "</td></tr>");
+						}
+						
+						out.println("</table></td></tr><tr><td colspan=\"3\" align=\"center\">selected: " + selected + ", valid: " + valid + ", accept: " + accept + ", readwrite: " + readwrite + "</td></tr></table>");
 						out.println("</pre>");
 					}
 				});
