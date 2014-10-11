@@ -335,5 +335,7 @@ VERSION:
       to the DNS crap.
     - Uninstantiable services now complain upon hot-deploy.
     - Threadlock prints stacktrace.
+    - Added /api with all available service endpoints when -panel is used.
+    - Accepts http://host prefix URIs now.
     
 have fun!

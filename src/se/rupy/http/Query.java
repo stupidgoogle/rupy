@@ -72,6 +72,9 @@ public class Query extends Hash {
 			path = decoder.decode(get, "UTF-8");
 			parameters = null;
 		}
+		
+		if(path.startsWith("http://"))
+			path = path.substring(path.indexOf("/", 8), path.length());
 
 		version = http.nextToken();
 		line = input.line();
