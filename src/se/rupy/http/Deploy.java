@@ -253,6 +253,15 @@ public class Deploy extends Service {
 				permissions.add(new PropertyPermission("sun.net.http.allowRestrictedHeaders", "write"));
 				permissions.add(new PropertyPermission("java.version", "read"));
 				permissions.add(new RuntimePermission("getStackTrace"));
+				
+				if(host.equals("root.rupy.se")) {
+					try {
+						permissions.add(new java.nio.file.LinkPermission("hard"));
+						permissions.add(new java.nio.file.LinkPermission("symbolic"));
+					}
+					catch(Error e) {}
+				}
+				
 				access = new AccessControlContext(new ProtectionDomain[] {
 						new ProtectionDomain(null, permissions)});
 				new File(path).mkdirs();

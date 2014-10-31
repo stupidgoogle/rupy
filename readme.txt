@@ -335,7 +335,9 @@ VERSION:
       to the DNS crap.
     - Uninstantiable services now complain upon hot-deploy.
     - Threadlock prints stacktrace.
-    - Added /api with all available service endpoints when -panel is used.
+    - Added /api with all service endpoints when -panel is used.
     - Accepts http://host prefix URIs now.
+    - Symbolic Links now allowed, required Java 1.7.
+    - Added 400 Bad Request.
     
 have fun!

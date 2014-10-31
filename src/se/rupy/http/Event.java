@@ -150,11 +150,11 @@ public class Event extends Throwable implements Chain.Link {
 	}
 
 	protected void log(Object o, int level) {
-		if (o instanceof Exception && daemon.debug) {
+		if(o instanceof Exception && daemon.debug) {
 			daemon.out.print("[" + (worker == null ? "*" : "" + worker.index())
 					+ "-" + index + "] ");
 			((Exception) o).printStackTrace(daemon.out);
-		} else if (daemon.debug || daemon.verbose && level == Event.VERBOSE)
+		} else if(daemon.debug || daemon.verbose && level == Event.VERBOSE)
 			daemon.out.println("["
 					+ (worker == null ? "*" : worker.index() + "|" + worker.id() + "|" + Thread.currentThread().getId()) + "-"
 					+ index + "] " + o);
@@ -220,7 +220,7 @@ public class Event extends Throwable implements Chain.Link {
 	protected void read() throws IOException {
 		touch();
 
-		if (!query.headers()) {
+		if(!query.headers()) {
 			disconnect(null);
 		}
 
@@ -232,7 +232,10 @@ public class Event extends Throwable implements Chain.Link {
 		
 		remote = address();
 
-		if (query.version() == null || !query.version().equalsIgnoreCase("HTTP/1.1")) {
+		if(!query.header().containsKey("host")) {
+			reply.code("400 Bad Request");
+		}
+		else if(query.version() == null || !query.version().equalsIgnoreCase("HTTP/1.1")) {
 			reply.code("505 Not Supported");
 		}
 		else {
@@ -258,7 +261,7 @@ public class Event extends Throwable implements Chain.Link {
 	protected String address() {
 		String remote = query.header("x-forwarded-for");
 
-		if (remote == null) {
+		if(remote == null) {
 			InetSocketAddress address = (InetSocketAddress) channel.socket()
 					.getRemoteSocketAddress();
 
@@ -266,7 +269,7 @@ public class Event extends Throwable implements Chain.Link {
 				remote = address.getAddress().getHostAddress();
 		}
 
-		if (Event.LOG) {
+		if(Event.LOG) {
 			log("remote " + remote, VERBOSE);
 		}
 
@@ -276,7 +279,7 @@ public class Event extends Throwable implements Chain.Link {
 	protected boolean content() throws IOException {
 		Deploy.Stream stream = daemon.content(query);
 
-		if (stream == null)
+		if(stream == null)
 			return false;
 
 		String type = MIME.content(query.path(), "application/octet-stream");
@@ -284,7 +287,7 @@ public class Event extends Throwable implements Chain.Link {
 		reply.type(type);
 		reply.modified(stream.date());
 
-		if (query.modified() == 0 || query.modified() < reply.modified()) {
+		if(query.modified() == 0 || query.modified() < reply.modified()) {
 			try {
 				Deploy.pipe(stream.input(), reply.output(stream.length()));
 			}
@@ -292,7 +295,7 @@ public class Event extends Throwable implements Chain.Link {
 				stream.close();
 			}
 
-			if (Event.LOG) {
+			if(Event.LOG) {
 				log("content " + type, VERBOSE);
 			}
 		} else {
@@ -313,7 +316,7 @@ public class Event extends Throwable implements Chain.Link {
 		} catch (Event e) {
 			// Break the filter chain.
 		} catch (Exception e) {
-			if (Event.LOG) {
+			if(Event.LOG) {
 				log(e);
 			}
 
@@ -348,22 +351,22 @@ public class Event extends Throwable implements Chain.Link {
 	}
 
 	protected void register() throws IOException {
-		if (interest != key.interestOps()) {
-			if (Event.LOG) {
+		if(interest != key.interestOps()) {
+			if(Event.LOG) {
 				log((interest == READ ? "read" : "write") + " prereg " + interest
 						+ " " + key.interestOps() + " " + key.readyOps(), DEBUG);
 			}
 			
 			key = channel.register(key.selector(), interest, this);
 			
-			if (Event.LOG) {
+			if(Event.LOG) {
 				log((interest == READ ? "read" : "write") + " postreg " + interest
 						+ " " + key.interestOps() + " " + key.readyOps(), DEBUG);
 			}
 			
 			key.selector().wakeup();
 			
-			//if (Event.LOG) {
+			//if(Event.LOG) {
 			//	log((interest == READ ? "read" : "write") + " wakeup", DEBUG);
 			//}
 		}
@@ -373,7 +376,7 @@ public class Event extends Throwable implements Chain.Link {
 		interest(interest);
 
 		try {
-			if (channel.isOpen())
+			if(channel.isOpen())
 				register();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -390,8 +393,8 @@ public class Event extends Throwable implements Chain.Link {
 
 			long delay = daemon.delay - (max - System.currentTimeMillis());
 
-			if (available > 0) {
-				if (Event.LOG) {
+			if(available > 0) {
+				if(Event.LOG) {
 					log("delay " + delay + " " + available, VERBOSE);
 				}
 
@@ -458,20 +461,20 @@ public class Event extends Throwable implements Chain.Link {
 
 	protected void disconnect(Exception e) {
 		try {
-			if (channel != null) { // && channel.isOpen()) {
+			if(channel != null) { // && channel.isOpen()) {
 				channel.close();
 			}
 
-			if (key != null) {
+			if(key != null) {
 				key.cancel();
 			}
 
-			if (session != null) {
+			if(session != null) {
 				session.remove(this);
 			}
 
 			if(daemon.debug) {
-				if (Event.LOG) {
+				if(Event.LOG) {
 					log("disconnect " + e);
 				}
 
@@ -501,11 +504,11 @@ public class Event extends Throwable implements Chain.Link {
 			key = cookie.length() > 0 ? cookie : null;
 		}
 
-		if (key != null) {
+		if(key != null) {
 			session = (Session) daemon.session().get(key);
 
-			if (session != null) {
-				if (Event.LOG) {
+			if(session != null) {
+				if(Event.LOG) {
 					log("old key " + key, VERBOSE);
 				}
 
@@ -539,7 +542,7 @@ public class Event extends Throwable implements Chain.Link {
 			session.add(this);
 			session.key(key);
 
-			if (session.key() == null) {
+			if(session.key() == null) {
 				do {
 					key = random(daemon.cookie);
 				} while (daemon.session().get(key) != null);
@@ -548,7 +551,7 @@ public class Event extends Throwable implements Chain.Link {
 			}
 
 			//synchronized (daemon.session()) {
-			if (Event.LOG) {
+			if(Event.LOG) {
 				log("new key " + session.key(), VERBOSE);
 			}
 
@@ -566,19 +569,19 @@ public class Event extends Throwable implements Chain.Link {
 	protected static String cookie(String cookie, String key) {
 		String value = null;
 
-		if (cookie != null) {
+		if(cookie != null) {
 			StringTokenizer tokenizer = new StringTokenizer(cookie, " ");
 
 			while (tokenizer.hasMoreTokens()) {
 				String part = tokenizer.nextToken();
 				int equals = part.indexOf("=");
 
-				if (equals > -1 && part.substring(0, equals).equals(key)) {
+				if(equals > -1 && part.substring(0, equals).equals(key)) {
 					String subpart = part.substring(equals + 1);
 
 					int index = subpart.indexOf(";");
 
-					if (index > 0) {
+					if(index > 0) {
 						value = subpart.substring(0, index);
 					} else {
 						value = subpart;

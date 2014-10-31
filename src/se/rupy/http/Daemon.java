@@ -1098,11 +1098,11 @@ public class Daemon implements Runnable {
 					public String path() { return "/panel"; }
 					public void filter(Event event) throws Event, Exception {
 						int width = 50;
-						
+
 						Output out = event.output();
 						out.println("<pre>");
 						out.println("<table><tr><td align=\"center\">Event</td><td></td><td align=\"center\">Worker</td></tr><tr><td valign=\"top\">");
-						
+
 						Iterator it = events.values().iterator();
 						out.println("<table><tr><td width=\"" + width + "\">id</td><td width=\"" + width + "\">init</td><td width=\"" + width + "\">push</td><td width=\"" + width + "\">done</td><td width=\"" + width + "\">last</td><td width=\"" + width + "\">worker</td></tr>");
 						out.println("<tr><td colspan=\"6\" bgcolor=\"#000\"></td></tr>");
@@ -1111,9 +1111,9 @@ public class Daemon implements Runnable {
 							out.println("<tr><td>" + e.index() + "</td><td>" + (e.reply().output.init ? "1" : "0") + "</td><td>" + (e.push() ? "1" : "0") + "</td><td>" + (e.reply().output.done ? "1" : "0") + "</td><td>" + (System.currentTimeMillis() - e.last()) + "</td><td>" + (e.worker() == null ? "" : "" + e.worker().index()) + "</td></tr>");
 						}
 						out.println("</table>");
-						
+
 						out.println("</td><td></td><td valign=\"top\">");
-						
+
 						out.println("<table><tr><td width=\"" + width + "\">id</td><td width=\"" + width + "\">busy</td><td width=\"" + width + "\">lock</td><td width=\"" + width + "\">event</td></tr>");
 						out.println("<tr><td colspan=\"4\" bgcolor=\"#000\"></td></tr>");
 						it = workers.iterator();
@@ -1121,7 +1121,7 @@ public class Daemon implements Runnable {
 							Worker worker = (Worker) it.next();
 							out.println("<tr><td>" + worker.index() + "</td><td>" + (worker.busy() ? "1" : "0") + "</td><td>" + worker.lock() + "</td><td>" + (worker.event() == null ? "" : "" + worker.event().index()) + "</td></tr>");
 						}
-						
+
 						out.println("</table></td></tr><tr><td colspan=\"3\" align=\"center\">selected: " + selected + ", valid: " + valid + ", accept: " + accept + ", readwrite: " + readwrite + "</td></tr></table>");
 						out.println("</pre>");
 					}
@@ -1137,14 +1137,22 @@ public class Daemon implements Runnable {
 							Deploy.Archive archive = (Deploy.Archive) it.next();
 							boolean host = !archive.host().equals("content");
 							String title = host ? archive.host() : archive.name();
-							out.println("- " + title);
+							String name = null;
 
-							Iterator it2 = archive.chain().keySet().iterator();
-							while(it2.hasNext()) {
-								String path = (String) it2.next();
-								
-								if(path.startsWith("/") && path.length() > 1)
-									out.println("    <a href=\"" + (host ? "http://" + title : "") + path + "\">" + path + "</a>");
+							if(host) {
+								name = event.query().header("host");
+							}
+
+							if(name == null || name.equals(archive.host())) {	
+								out.println("- " + title);
+
+								Iterator it2 = archive.chain().keySet().iterator();
+								while(it2.hasNext()) {
+									String path = (String) it2.next();
+
+									if(path.startsWith("/") && path.length() > 1)
+										out.println("    <a href=\"" + (host ? "http://" + title : "") + path + "\">" + path + "</a>");
+								}
 							}
 						}
 						event.output().println("</pre>");
