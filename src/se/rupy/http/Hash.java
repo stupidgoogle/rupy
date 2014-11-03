@@ -8,6 +8,12 @@ import java.util.HashMap;
  * @author marc
  */
 public class Hash extends HashMap {
+	private boolean secure;
+	
+	public Hash(boolean secure) {
+		this.secure = secure;
+	}
+	
 	public long big(String key) {
 		return big(key, 0);
 	}
@@ -170,6 +176,13 @@ public class Hash extends HashMap {
 	
 	public void put(String key, boolean value) {
 		super.put(key, new Boolean(value));
+	}
+	
+	public Object put(Object key, Object value) {
+		if(secure && key instanceof String && ((String) key).equals("host"))
+			return null;
+		
+		return super.put(key, value);
 	}
 	
 	/**

@@ -48,5 +48,9 @@
 	<target name="doc">
 		<javadoc access="public" sourcepath="src" destdir="doc" stylesheetfile="sheet.css"/>
 	</target>
+	
+	<target name="newdoc">
+		<javadoc access="public" sourcepath="src" destdir="doc"/>
+	</target>
 		
 </project>

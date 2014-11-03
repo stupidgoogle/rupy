@@ -18,6 +18,7 @@ public class Session extends Hash {
 	private long date, expires;
 
 	protected Session(Daemon daemon, String host) {
+		super(false);
 		this.daemon = daemon;
 
 		service = new Chain();

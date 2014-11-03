@@ -338,6 +338,7 @@ VERSION:
     - Added /api with all service endpoints when -panel is used.
     - Accepts http://host prefix URIs now.
     - Added 400 Bad Request if host header is missing.
-    - Fixed wildcard "null" path service on host.
+    - Fixed wildcard "null" path service on host and 
+      a potential hosted security problem.
     
 have fun!

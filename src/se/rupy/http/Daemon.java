@@ -732,7 +732,10 @@ public class Daemon implements Runnable {
 	}
 
 	public void add(Service service) throws Exception {
-		add(this.service, service, null);
+		if(host)
+			throw new Exception("You can't add services manually in hosted mode.");
+		else
+			add(this.service, service, null);
 	}
 
 	protected void add(HashMap map, final Service service, final Deploy.Archive archive) throws Exception {
@@ -945,7 +948,7 @@ public class Daemon implements Runnable {
 		}
 	}
 
-	public Chain chain(String host, String path) {
+	protected Chain chain(String host, String path) {
 		synchronized (this.service) {
 			Chain chain = (Chain) this.service.get(path);
 
@@ -1060,13 +1063,17 @@ public class Daemon implements Runnable {
 			}			
 
 			if (pass != null && pass.length() > 0 || host) {
+				Service deploy = null;
+				
 				if(host) {
-					add(new Deploy("app" + File.separator));
+					deploy = new Deploy("app" + File.separator);
 				}
 				else {
-					add(new Deploy("app" + File.separator, pass));
+					deploy = new Deploy("app" + File.separator, pass);
 				}
 
+				add(this.service, deploy, null);
+				
 				File[] app = new File(Deploy.path).listFiles(new Filter());
 				File domain = null;
 
@@ -1099,7 +1106,7 @@ public class Daemon implements Runnable {
 			 */
 
 			if(panel) {
-				add(new Service() {
+				Service panel = new Service() {
 					public String path() { return "/panel"; }
 					public void filter(Event event) throws Event, Exception {
 						int width = 50;
@@ -1130,9 +1137,9 @@ public class Daemon implements Runnable {
 						out.println("</table></td></tr><tr><td colspan=\"3\" align=\"center\">selected: " + selected + ", valid: " + valid + ", accept: " + accept + ", readwrite: " + readwrite + "</td></tr></table>");
 						out.println("</pre>");
 					}
-				});
+				};
 
-				add(new Service() {
+				Service api = new Service() {
 					public String path() { return "/api"; }
 					public void filter(Event event) throws Event, Exception {
 						Iterator it = archive.values().iterator();
@@ -1163,7 +1170,10 @@ public class Daemon implements Runnable {
 						}
 						event.output().println("</pre>");
 					}
-				});
+				};
+				
+				add(this.service, panel, null);
+				add(this.service, api, null);
 			}
 
 			if (properties.getProperty("test", "false").toLowerCase().equals(

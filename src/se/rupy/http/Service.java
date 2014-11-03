@@ -48,7 +48,7 @@ public abstract class Service implements Chain.Link {
 	 * the login page for example:
 	 * 
 	 * <pre>
-	 * event.daemon().chain("/login").filter(event);
+	 * event.daemon().chain(event, "/login").filter(event);
 	 * throw event; // stop the chain</pre>or
 	 * 
 	 * <pre>

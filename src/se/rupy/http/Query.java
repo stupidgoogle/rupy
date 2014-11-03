@@ -21,6 +21,7 @@ public class Query extends Hash {
 	private boolean done, parsed, policy;
 
 	protected Query(Event event) throws IOException {
+		super(true);
 		headers = new HashMap();
 		input = new Input.Chunked(event);
 	}
