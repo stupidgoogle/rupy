@@ -731,6 +731,11 @@ public class Daemon implements Runnable {
 		thread.start();
 	}
 
+	/**
+	 * You can only add services manually in unhosted mode.
+	 * @param service
+	 * @throws Exception
+	 */
 	public void add(Service service) throws Exception {
 		if(host)
 			throw new Exception("You can't add services manually in hosted mode.");

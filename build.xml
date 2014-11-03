@@ -46,11 +46,7 @@
 	</target>
 
 	<target name="doc">
-		<javadoc access="public" sourcepath="src" destdir="doc" stylesheetfile="sheet.css"/>
-	</target>
-	
-	<target name="newdoc">
-		<javadoc access="public" sourcepath="src" destdir="doc"/>
+		<javadoc access="public" sourcepath="src" destdir="doc" executable="javadoc" stylesheetfile="sheet.css"/>
 	</target>
 		
 </project>

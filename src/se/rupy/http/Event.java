@@ -5,6 +5,7 @@ import java.net.*;
 import java.nio.*;
 import java.security.AccessController;
 import java.security.PrivilegedExceptionAction;
+import java.security.SecureRandom;
 import java.text.*;
 import java.util.*;
 
@@ -38,10 +39,16 @@ public class Event extends Throwable implements Chain.Link {
 	static int VERBOSE = 1 << 0;
 	static int DEBUG = 1 << 1;
 
-	private static char[] BASE_24 = { 'b', 'c', 'd', 'f', 'g', 'h', 'j', 'k',
-		'm', 'p', 'q', 'r', 't', 'v', 'w', 'x', 'y', '2', '3', '4', '6',
-		'7', '8', '9' };
-
+	static SecureRandom random = new SecureRandom();
+	
+	private static char[] BASE_58 = { 
+	'1','2','3','4','5','6','7','8','9','A',
+	'B','C','D','E','F','G','H','J','K','L',
+	'M','N','P','Q','R','S','T','U','V','W',
+	'X','Y','Z','a','b','c','d','e','f','g',
+	'h','i','j','k','m','n','o','p','q','r',
+	's','t','u','v','w','x','y','z' };
+	
 	static Mime MIME;
 
 	static {
@@ -599,14 +606,13 @@ public class Event extends Throwable implements Chain.Link {
 	}
 
 	public static String random(int length) {
-		Random random = new Random();
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder builder = new StringBuilder();
 
-		while (buffer.length() < length) {
-			buffer.append(BASE_24[Math.abs(random.nextInt() % 24)]);
+		while (builder.length() < length) {
+			builder.append(BASE_58[Math.abs(random.nextInt() % BASE_58.length)]);
 		}
 
-		return buffer.toString();
+		return builder.toString();
 	}
 
 	/**
