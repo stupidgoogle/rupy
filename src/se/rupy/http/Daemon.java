@@ -932,12 +932,17 @@ public class Daemon implements Runnable {
 			return chain(query.header("host"), query.path());
 		}
 		else {
-			return chain(query.path());
+			return chain("content", query.path());
 		}
 	}
-
-	public Chain chain(String path) {
-		return chain("content", path);
+	
+	public Chain chain(Event event, String path) {
+		if(host) {
+			return chain(event.query().header("host"), path);
+		}
+		else {
+			return chain("content", path);
+		}
 	}
 
 	public Chain chain(String host, String path) {
@@ -1151,7 +1156,8 @@ public class Daemon implements Runnable {
 									String path = (String) it2.next();
 
 									if(path.startsWith("/") && path.length() > 1)
-										out.println("    <a href=\"" + (host ? "http://" + title : "") + path + "\">" + path + "</a>");
+										out.println("    <a href=\"" + path + "\">" + path + "</a>");
+										//out.println("    <a href=\"" + (host ? "http://" + title : "") + path + "\">" + path + "</a>");
 								}
 							}
 						}

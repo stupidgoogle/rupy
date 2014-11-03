@@ -337,7 +337,7 @@ VERSION:
     - Threadlock prints stacktrace.
     - Added /api with all service endpoints when -panel is used.
     - Accepts http://host prefix URIs now.
-    - Symbolic Links now allowed, required Java 1.7.
-    - Added 400 Bad Request.
+    - Added 400 Bad Request if host header is missing.
+    - Fixed wildcard "null" path service on host.
     
 have fun!

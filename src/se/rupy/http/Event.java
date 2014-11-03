@@ -246,7 +246,7 @@ public class Event extends Throwable implements Chain.Link {
 							"<pre>'" + query.path() + "' is forbidden.</pre>");
 				}
 				else if(!content()) {
-					if(!service(daemon.chain("null"))) {
+					if(!service(daemon.chain(this, "null"))) {
 						reply.code("404 Not Found");
 						reply.output().print(
 								"<pre>'" + query.path() + "' was not found.</pre>");
@@ -325,9 +325,14 @@ public class Event extends Throwable implements Chain.Link {
 			StringWriter trace = new StringWriter();
 			PrintWriter print = new PrintWriter(trace);
 			e.printStackTrace(print);
-
+			
 			reply.code("500 Internal Server Error");
 			reply.output().print("<pre>" + trace.toString() + "</pre>");
+			
+			if(reply.push()) {
+				reply.output().finish();
+				reply.output().flush();
+			}
 		}
 
 		return true;
