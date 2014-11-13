@@ -178,6 +178,10 @@ public class Hash extends HashMap {
 		super.put(key, new Boolean(value));
 	}
 	
+	protected Object secure(Object key, Object value) {
+		return super.put(key, value);
+	}
+	
 	public Object put(Object key, Object value) {
 		if(secure && key instanceof String && ((String) key).equals("host"))
 			return null;

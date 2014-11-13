@@ -14,15 +14,15 @@ public class Query extends Hash {
 	public final static int GET = 1 << 0, POST = 1 << 1, PUT = 1 << 2, DELETE = 1 << 3, HEAD = 1 << 4;
 	private static URLDecoder decoder = new URLDecoder();
 	private String path, version, parameters;
-	private HashMap headers;
+	private Hash headers;
 	private Input input;
 	private int method;
 	private long length, modified;
 	private boolean done, parsed, policy;
 
 	protected Query(Event event) throws IOException {
-		super(true);
-		headers = new HashMap();
+		super(false);
+		headers = new Hash(true);
 		input = new Input.Chunked(event);
 	}
 
@@ -88,7 +88,7 @@ public class Query extends Hash {
 				String name = line.substring(0, colon).toLowerCase();
 				String value = line.substring(colon + 1).trim();
 
-				headers.put(name, value);
+				headers.secure(name, value);
 			}
 
 			line = input.line();
