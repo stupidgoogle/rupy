@@ -340,5 +340,6 @@ VERSION:
     - Added 400 Bad Request if host header is missing.
     - Fixed wildcard "null" path service on host and 
       a potential hosted security problem.
+    - Added a simple but high performance Async client.
     
 have fun!
