@@ -40,6 +40,7 @@ public class Daemon implements Runnable {
 	ConcurrentHashMap events, session;
 	int threads, timeout, cookie, delay, size, port, cache;
 	boolean verbose, debug, host, alive, panel;
+	Async client;
 
 	/**
 	 * Don't forget to call {@link #start()}.
@@ -228,6 +229,15 @@ public class Daemon implements Runnable {
 		}
 	}
 
+	public Async client() throws Exception {
+		if(client == null) {
+			client = new Async();
+			client.start(threads);
+		}
+		
+		return client;
+	}
+	
 	/**
 	 * @return hostname
 	 */
