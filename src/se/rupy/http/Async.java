@@ -32,11 +32,11 @@ public class Async implements Runnable {
 	private Selector selector;
 	private Queue queue;
 
-	public Async() {
+	protected Async() {
 		this(false);
 	}
 
-	public Async(boolean debug) {
+	protected Async(boolean debug) {
 		calls = new CopyOnWriteArrayList();
 		this.debug = debug;
 	}

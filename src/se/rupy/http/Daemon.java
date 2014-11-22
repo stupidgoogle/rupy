@@ -231,7 +231,7 @@ public class Daemon implements Runnable {
 
 	public Async client() throws Exception {
 		if(client == null) {
-			client = new Async();
+			client = new Async(debug);
 			client.start(threads);
 		}
 		
