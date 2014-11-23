@@ -14,7 +14,7 @@ import java.util.Set;
 /**
  * High speed HTTP async NIO client.<br>
  * <br>
- * This exist because Apache HAC:<br>
+ * This exists because Apache HAC:<br>
  * <br>
  * - Can't handle Murphy's law.<br>
  * - Rarely blocks forever stuck in sun.misc.Unsafe.park().<br>
