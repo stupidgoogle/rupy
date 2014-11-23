@@ -20,7 +20,7 @@ import java.util.Set;
  * - Rarely blocks forever stuck in sun.misc.Unsafe.park().<br>
  * - Is pretty slow and big (adds ~20-30 ms. and 1.5 MB).<br>
  * <br>
- * TODO: Response chunks.<br>
+ * TODO: Chunks.<br>
  * 
  * @author Marc
  */
@@ -125,7 +125,7 @@ public class Async implements Runnable {
 	/**
 	 * Holds the channel and buffer.
 	 * Work in progress.
-	 * TODO: Response chunks.
+	 * TODO: Chunks.
 	 */
 	public class Call implements Runnable {
 		private static final int CONNECT = SelectionKey.OP_CONNECT;
