@@ -231,7 +231,7 @@ public class Daemon implements Runnable {
 
 	public Async client() throws Exception {
 		if(client == null) {
-			client = new Async(debug);
+			client = new Async(false);
 			client.start(threads);
 		}
 		
@@ -1154,6 +1154,16 @@ public class Daemon implements Runnable {
 					}
 				};
 
+				Service debug = new Service() {
+					public String path() { return "/debug"; }
+					public void filter(Event event) throws Event, Exception {
+						if(client != null)
+							event.output().print(client.debug());
+						else
+							event.output().print("Async client not started yet.");
+					}
+				};
+				
 				Service api = new Service() {
 					public String path() { return "/api"; }
 					public void filter(Event event) throws Event, Exception {
@@ -1188,6 +1198,7 @@ public class Daemon implements Runnable {
 				};
 				
 				add(this.service, panel, null);
+				add(this.service, debug, null);
 				add(this.service, api, null);
 			}
 

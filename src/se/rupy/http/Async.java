@@ -41,6 +41,11 @@ public class Async implements Runnable {
 		this.debug = debug;
 	}
 
+	public boolean debug() {
+		debug = !debug;
+		return debug;
+	}
+	
 	/**
 	 * This is your Async callback.
 	 */
@@ -411,7 +416,7 @@ public class Async implements Runnable {
 		}
 
 		private void print(String pre) {
-			System.out.println(pre + " [" + host + "][" + invalidate + "]");
+			System.out.println(pre + " [" + host + "][" + invalidate + "][" + cookie + "]");
 		}
 	}
 	
