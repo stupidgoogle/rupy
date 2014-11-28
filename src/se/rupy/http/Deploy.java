@@ -715,7 +715,7 @@ public class Deploy extends Service {
 	private static String hash(String hash) throws NoSuchAlgorithmException {
 		MessageDigest md = MessageDigest.getInstance("SHA-256");
 		md.update(hash.getBytes(), 0, hash.length());
-		return hashheadzerofix(md.digest());
+		return hex(md.digest());
 	}
 	
 	private static String hash(File file) throws NoSuchAlgorithmException, FileNotFoundException, IOException {
@@ -729,10 +729,10 @@ public class Deploy extends Service {
 				md.update(buffer, 0, n);
 			}
 		}
-		return hashheadzerofix(md.digest());
+		return hex(md.digest());
 	}
 	
-	private static String hashheadzerofix(byte[] data) {
+	private static String hex(byte[] data) {
 		StringBuilder builder = new StringBuilder();
 
 		for(int i = 0; i < data.length; i++) {
