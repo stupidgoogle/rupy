@@ -690,11 +690,11 @@ public class Deploy extends Service {
 	 * It returns something like: "{"host": "xxx", "pass": "xxx", "ip": "xxx"}"
 	 */
 	public static String hash(File file, String pass, String cookie) throws NoSuchAlgorithmException, FileNotFoundException, IOException {
-		String hash = hash(file);
+		String hash = hash(file, "SHA-256");
 		//System.out.println(hash + " " + pass);
-		hash = hash(hash + pass);
+		hash = hash(hash + pass, "SHA-256");
 		//System.out.println(hash + " " + cookie);
-		hash = hash(hash + cookie);
+		hash = hash(hash + cookie, "SHA-256");
 		//System.out.println(hash);
 		return hash;
 	}
@@ -712,14 +712,20 @@ public class Deploy extends Service {
 		//in = client.send(url, file, port, cluster, true);
 	}
 
-	private static String hash(String hash) throws NoSuchAlgorithmException {
-		MessageDigest md = MessageDigest.getInstance("SHA-256");
+	/**
+	 * Hash string to hex.
+	 */
+	public static String hash(String hash, String algo) throws NoSuchAlgorithmException {
+		MessageDigest md = MessageDigest.getInstance(algo);
 		md.update(hash.getBytes(), 0, hash.length());
 		return hex(md.digest());
 	}
 	
-	private static String hash(File file) throws NoSuchAlgorithmException, FileNotFoundException, IOException {
-		MessageDigest md = MessageDigest.getInstance("SHA-256");
+	/**
+	 * Hash file to hex.
+	 */
+	public static String hash(File file, String algo) throws NoSuchAlgorithmException, FileNotFoundException, IOException {
+		MessageDigest md = MessageDigest.getInstance(algo);
 		InputStream in = new FileInputStream(file);
 		int n = 0;
 		byte[] buffer = new byte[8192];
