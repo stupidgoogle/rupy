@@ -73,7 +73,7 @@ public abstract class Output extends OutputStream implements Event.Block {
 		flush();
 	}
 	
-	protected void init(long length) throws IOException {
+	protected synchronized void init(long length) throws IOException {
 		if (init) {
 			if (Event.LOG) {
 				reply.event().log("already inited", Event.DEBUG);

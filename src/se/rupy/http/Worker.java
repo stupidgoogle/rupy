@@ -62,10 +62,10 @@ public class Worker implements Runnable, Chain.Link {
 		return chunk;
 	}
 
-	protected void wakeup() {
+	protected void wakeup(boolean match) {
 		if (Event.LOG) {
 			if(event != null && event.daemon().debug)
-				event.log("wakeup", Event.DEBUG);
+				event.log("wakeup " + match, Event.DEBUG);
 		}
 
 		touch();

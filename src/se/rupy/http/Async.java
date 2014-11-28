@@ -45,7 +45,7 @@ public class Async implements Runnable {
 		debug = !debug;
 		return debug;
 	}
-	
+
 	/**
 	 * This is your Async callback.
 	 */
@@ -73,7 +73,7 @@ public class Async implements Runnable {
 	 * Thrown when {@link SocketChannel#read(ByteBuffer)} returns -1.
 	 */
 	public static class Timeout extends Exception {}
-	
+
 	/**
 	 * More workers are only important on multi-core processors.
 	 */
@@ -110,7 +110,7 @@ public class Async implements Runnable {
 		call.state(Call.CONNECT);
 		calls.add(call);
 		selector.wakeup();
-		
+
 		if(debug)
 			call.print("open");
 	}
@@ -252,7 +252,7 @@ public class Async implements Runnable {
 
 			if(debug)
 				System.out.println("  write " + write + " " + length);
-				
+
 			if(write != length) {
 				throw new Exception("Data too long?");
 			}
@@ -267,82 +267,88 @@ public class Async implements Runnable {
 			int read = channel.read(buffer), full = 0;
 			String length = null;
 			String head = null;
-			
+
 			if(debug)
 				System.out.println("  read " + read);
-			
-			while(read > 0) {
-				buffer.rewind();
-				buffer.get(data, 0, read);
-				
-				if(body == null) {
-					head = new String(data, "utf-8");
-					int boundary = head.indexOf("\r\n\r\n");
 
-					if(boundary == -1)
-						throw new Exception("Boundary not found.");
+			try {
+				while(read > 0) {
+					buffer.rewind();
+					buffer.get(data, 0, read);
 
-					boundary += 4;
+					if(body == null) {
+						head = new String(data, "utf-8");
+						int boundary = head.indexOf("\r\n\r\n");
 
-					if(cookie == null) {
-						cookie = header(head, "Set-Cookie:");
-						if(cookie != null)
-							cookie = cookie.substring(0, cookie.indexOf(";"));
+						if(boundary == -1)
+							throw new Exception("Boundary not found.");
+
+						boundary += 4;
+
+						if(cookie == null) {
+							cookie = header(head, "Set-Cookie:");
+							if(cookie != null)
+								cookie = cookie.substring(0, cookie.indexOf(";"));
+						}
+
+						length = header(head, "Content-Length:");
+						int size = 0, part = 0;
+
+						if(length == null) {
+							String hex = head.substring(boundary, head.indexOf("\r\n", boundary));
+							boundary += hex.length() + 2;
+
+							size = Integer.parseInt(hex, 16);
+							part = size;
+						}
+						else {
+							size = Integer.parseInt(length);
+							part = read - boundary;
+						}
+
+						body = new byte[size];
+
+						System.arraycopy(data, boundary, body, 0, part);
+						full += part;
 					}
-
-					length = header(head, "Content-Length:");
-					int size = 0, part = 0;
+					else if(length != null) {
+						System.arraycopy(data, 0, body, full, read);
+						full += read;
+					}
 
 					if(length == null) {
-						String hex = head.substring(boundary, head.indexOf("\r\n", boundary));
-						boundary += hex.length() + 2;
-
-						size = Integer.parseInt(hex, 16);
-						part = size;
+						if(find(data)) {
+							String text = new String(body, "utf-8");
+							if(head.startsWith("HTTP/1.1 500"))
+								throw new Exception(text);
+							else
+								return text.trim();
+						}
 					}
-					else {
-						size = Integer.parseInt(length);
-						part = read - boundary;
-					}
-					
-					body = new byte[size];
-
-					System.arraycopy(data, boundary, body, 0, part);
-					full += part;
-				}
-				else if(length != null) {
-					System.arraycopy(data, 0, body, full, read);
-					full += read;
-				}
-
-				if(length == null) {
-					if(find(data)) {
+					else if(full == body.length) {
 						String text = new String(body, "utf-8");
 						if(head.startsWith("HTTP/1.1 500"))
 							throw new Exception(text);
 						else
 							return text.trim();
 					}
-				}
-				else if(full == body.length) {
-					String text = new String(body, "utf-8");
-					if(head.startsWith("HTTP/1.1 500"))
-						throw new Exception(text);
-					else
-						return text.trim();
-				}
-				
-				buffer.clear();
-				read = channel.read(buffer);
 
-				while(body != null && read == 0) {
-					read(selector);
-					selector.wakeup();
+					buffer.clear();
 					read = channel.read(buffer);
-				}
 
-				if(debug)
-					System.out.println("  read " + read);
+					while(body != null && read == 0) {
+						read(selector);
+						selector.wakeup();
+						read = channel.read(buffer);
+					}
+
+					if(debug)
+						System.out.println("  read " + read);
+				}
+			}
+			catch(Exception e) {
+				System.out.println(head);
+				throw e;
 			}
 
 			if(read == -1) {
@@ -357,10 +363,10 @@ public class Async implements Runnable {
 				if(data[i] == '0' && data[i + 1] == '\r' && data[i + 2] == '\n' && data[i + 3] == '\r' && data[i + 4] == '\n')
 					return true;
 			}
-			
+
 			return false;
 		}
-		
+
 		private String header(String head, String name) {
 			int index = head.indexOf(name);
 
@@ -419,7 +425,7 @@ public class Async implements Runnable {
 			System.out.println(pre + " [" + host + "][" + invalidate + "][" + cookie + "]");
 		}
 	}
-	
+
 	private class Queue {
 		private final Worker[] threads;
 		private final LinkedList queue;
@@ -483,7 +489,7 @@ public class Async implements Runnable {
 	private void wakeup() {
 		selector.wakeup();
 	}
-	
+
 	private boolean remove(Call call) throws Exception {
 		if(call.invalidate()) {
 			try {
@@ -497,7 +503,7 @@ public class Async implements Runnable {
 
 			if(debug)
 				call.print("kill");
-			
+
 			return true;
 		}
 

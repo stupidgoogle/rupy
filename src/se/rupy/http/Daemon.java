@@ -1258,7 +1258,7 @@ public class Daemon implements Runnable {
 							} else if (worker == null) {
 								match(event, null);
 							} else {
-								worker.wakeup();
+								worker.wakeup(false);
 							}
 						}
 					}
@@ -1382,7 +1382,7 @@ public class Daemon implements Runnable {
 		event.worker(worker);
 
 		if(wakeup) {
-			worker.wakeup();
+			worker.wakeup(true);
 		}
 
 		return true;
