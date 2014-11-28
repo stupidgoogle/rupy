@@ -6,6 +6,10 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.security.AccessControlException;
+import java.security.AccessController;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -30,14 +34,12 @@ public class Async implements Runnable {
 
 	private CopyOnWriteArrayList calls;
 	private Selector selector;
+	private Daemon daemon;
 	private Queue queue;
-
-	protected Async() {
-		this(false);
-	}
-
-	protected Async(boolean debug) {
+	
+	protected Async(Daemon daemon, boolean debug) {
 		calls = new CopyOnWriteArrayList();
+		this.daemon = daemon;
 		this.debug = debug;
 	}
 
@@ -50,6 +52,12 @@ public class Async implements Runnable {
 	 * This is your Async callback.
 	 */
 	public static abstract class Work {
+		protected Event event;
+		
+		public Work(Event event) {
+			this.event = event;
+		}
+		
 		/**
 		 * POST or GET small data with {@link Async.Call#post(String, String, byte[])} or {@link Async.Call#get(String, String)}.
 		 */
@@ -85,6 +93,7 @@ public class Async implements Runnable {
 
 	/**
 	 * Send work to some host.
+	 * If you are using fuse, throw the event immediately after to avoid async cascades.
 	 * @param invalidate the number of seconds after which the channel is regarded as unreliable.
 	 */
 	public synchronized void send(String host, Work work, int invalidate) throws Exception {
@@ -153,9 +162,6 @@ public class Async implements Runnable {
 		private SocketChannel channel;
 		private long time;
 		private boolean running;
-
-		private byte[] data = new byte[SIZE];
-		private ByteBuffer buffer = ByteBuffer.allocate(SIZE);
 
 		private Call(Async async, Work work, String host, int invalidate) {
 			this.invalidate = invalidate;
@@ -262,8 +268,10 @@ public class Async implements Runnable {
 		 * Only one chunk supported.
 		 */
 		private String read() throws Exception {
-			buffer.clear();
+			ByteBuffer buffer = ByteBuffer.allocate(SIZE);
+			byte[] data = new byte[SIZE];
 			byte[] body = null;
+			
 			int read = channel.read(buffer), full = 0;
 			String length = null;
 			String head = null;
@@ -385,13 +393,50 @@ public class Async implements Runnable {
 				}
 
 				if(run == WRITE) {
-					work.send(this);
+					if(daemon.host) {
+						try {
+							final Deploy.Archive archive = daemon.archive(work.event.query().header("host"));
+							final Call call = this;
+							Thread.currentThread().setContextClassLoader(archive);
+							AccessController.doPrivileged(new PrivilegedExceptionAction() {
+								public Object run() throws Exception {
+									work.send(call);
+									return null;
+								}
+							}, archive.access());
+						}
+						catch(PrivilegedActionException e) {
+							e.printStackTrace();
+						}
+					}
+					else {
+						work.send(this);
+					}
+					
 					state(Call.READ);
 					async.wakeup();
 				}
 
 				if(run == READ) {
-					work.read(read());
+					if(daemon.host) {
+						try {
+							final Deploy.Archive archive = daemon.archive(work.event.query().header("host"));
+							Thread.currentThread().setContextClassLoader(archive);
+							AccessController.doPrivileged(new PrivilegedExceptionAction() {
+								public Object run() throws Exception {
+									work.read(read());
+									return null;
+								}
+							}, archive.access());
+						}
+						catch(PrivilegedActionException e) {
+							e.printStackTrace();
+						}
+					}
+					else {
+						work.read(read());
+					}
+					
 					remove(this);
 					work = null;
 				}

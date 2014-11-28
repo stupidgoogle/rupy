@@ -230,11 +230,6 @@ public class Daemon implements Runnable {
 	}
 
 	public Async client() throws Exception {
-		if(client == null) {
-			client = new Async(false);
-			client.start(threads);
-		}
-		
 		return client;
 	}
 	
@@ -364,6 +359,9 @@ public class Daemon implements Runnable {
 				//System.err.println(worker.index() + "|" + worker.id());
 			}
 
+			client = new Async(this, false);
+			client.start(threads);
+			
 			alive = true;
 
 			Thread thread = new Thread(this);
