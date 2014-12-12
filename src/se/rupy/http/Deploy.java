@@ -146,6 +146,10 @@ public class Deploy extends Service {
 					event.reply().output().println("Deploy is propagating on cluster.");
 				}
 				else {
+					// doesen't work :(
+					//name = file.getName().substring(0, file.getName().lastIndexOf("."));
+					//File rename = new File(path + name);
+					//file.renameTo(rename);
 					file.delete();
 					throw new Exception("Pass verification failed. (" + name + ")");
 				}
