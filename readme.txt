@@ -342,4 +342,12 @@ VERSION:
       a potential hosted security problem.
     - Added a simple but high performance Async client.
     
+    1.3 Cluster (WIP)
+    
+    TODO:
+    
+    - Integrate ROOT.
+    - Add deploy rollback.
+    - Store CPU/SSD/NET for everyone.
+    
 have fun!

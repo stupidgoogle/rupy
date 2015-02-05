@@ -31,7 +31,7 @@ public class Daemon implements Runnable {
 	private HashMap archive, service;
 	private Heart heart;
 	private Selector selector;
-	private String domain, name;
+	private String domain, name, bind;
 
 	Chain workers, queue;
 	Properties properties;
@@ -185,6 +185,8 @@ public class Daemon implements Runnable {
 		boolean multi = properties.getProperty("multi", "false").toLowerCase().equals(
 				"true");
 
+		bind = properties.getProperty("bind", null);
+		
 		if(multi) {
 			try {
 				setup();
@@ -1042,7 +1044,12 @@ public class Daemon implements Runnable {
 		try {
 			selector = Selector.open();
 			server = ServerSocketChannel.open();
-			server.socket().bind(new InetSocketAddress(port));
+			
+			if(bind == null)
+				server.socket().bind(new InetSocketAddress(port));
+			else
+				server.socket().bind(new InetSocketAddress(bind, port));
+			
 			server.configureBlocking(false);
 			server.register(selector, SelectionKey.OP_ACCEPT);
 
